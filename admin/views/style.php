@@ -20,8 +20,20 @@ $id_prefix = 'atep';
 	<?php endif; ?>
 
 	<?php if ( ! empty( $_GET['checked'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-		<div class="notice notice-success"><p><?php esc_html_e( 'Проверка обновлений выполнена. Если на GitHub есть более новая версия, она появится в разделе «Плагины».', 'at-excel-price' ); ?></p></div>
+		<div class="notice notice-success"><p><?php esc_html_e( 'Проверка обновлений выполнена. Если доступна новая версия — см. блок ниже или страницу «Плагины».', 'at-excel-price' ); ?></p></div>
 	<?php endif; ?>
+
+	<?php if ( ! empty( $_GET['updated_plugin'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+		<div class="notice notice-success"><p><?php esc_html_e( 'Плагин обновлён с GitHub.', 'at-excel-price' ); ?></p></div>
+	<?php endif; ?>
+
+	<?php
+	$style_error = get_transient( 'atep_admin_error_' . get_current_user_id() );
+	if ( $style_error ) {
+		delete_transient( 'atep_admin_error_' . get_current_user_id() );
+		echo '<div class="notice notice-error"><p>' . esc_html( (string) $style_error ) . '</p></div>';
+	}
+	?>
 
 	<form method="post">
 		<?php wp_nonce_field( 'atep_save_style' ); ?>
@@ -88,11 +100,25 @@ $id_prefix = 'atep';
 					<?php endif; ?>
 				</p>
 			<?php endif; ?>
-			<p>
+			<p class="atep-style-actions">
 				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=at-excel-price-style&atep_check_updates=1' ), 'atep_check_updates' ) ); ?>">
 					<?php esc_html_e( 'Проверить обновления', 'at-excel-price' ); ?>
 				</a>
+				<?php if ( ! empty( $release['version'] ) && version_compare( $release['version'], $installed, '>' ) ) : ?>
+					<a class="button button-primary" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=at-excel-price-style&atep_install_update=1' ), 'atep_install_update' ) ); ?>">
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %s: version */
+								__( 'Установить %s с GitHub', 'at-excel-price' ),
+								$release['version']
+							)
+						);
+						?>
+					</a>
+				<?php endif; ?>
 			</p>
+			<p class="description"><?php esc_html_e( 'Если в списке плагинов кнопку не видно (Easy Updates Manager и др.), обновляйте отсюда.', 'at-excel-price' ); ?></p>
 		</div>
 
 		<?php submit_button( __( 'Сохранить', 'at-excel-price' ) ); ?>

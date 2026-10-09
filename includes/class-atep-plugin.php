@@ -273,7 +273,20 @@ class ATEP_Plugin {
 			check_admin_referer( 'atep_check_updates' );
 			ATEP_Updater::flush_cache();
 			wp_update_plugins();
+			ATEP_Updater::force_transient();
 			wp_safe_redirect( admin_url( 'admin.php?page=at-excel-price-style&checked=1' ) );
+			exit;
+		}
+
+		if ( ! empty( $_GET['atep_install_update'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			check_admin_referer( 'atep_install_update' );
+			$result = ATEP_Updater::install_from_github();
+			if ( is_wp_error( $result ) ) {
+				set_transient( 'atep_admin_error_' . get_current_user_id(), $result->get_error_message(), 60 );
+				wp_safe_redirect( admin_url( 'admin.php?page=at-excel-price-style&update_failed=1' ) );
+				exit;
+			}
+			wp_safe_redirect( admin_url( 'admin.php?page=at-excel-price-style&updated_plugin=1' ) );
 			exit;
 		}
 
