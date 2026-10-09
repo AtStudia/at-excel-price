@@ -202,7 +202,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					echo esc_html(
 						sprintf(
 							/* translators: %s: error */
-							__( 'Ошибка данных: %s', 'at-excel-price' ),
+							__( 'Ошибка данных: %s. Нажмите «Обновить файл» и загрузите Excel ещё раз.', 'at-excel-price' ),
 							$diag['error']
 						)
 					);

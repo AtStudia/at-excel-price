@@ -304,17 +304,54 @@ class ATEP_Plugin {
 			$out['error'] = 'empty';
 			return $out;
 		}
-		$json = wp_unslash( $raw );
-		$data = json_decode( $json, true );
-		if ( ! is_array( $data ) ) {
-			$data = json_decode( stripslashes( $json ), true );
+
+		$raw  = wp_unslash( $raw );
+		$json = '';
+
+		// New safe format: base64, immune to WP slash/quote corruption.
+		if ( 0 === strpos( $raw, 'atep64:' ) ) {
+			$decoded = base64_decode( substr( $raw, 7 ), true );
+			if ( false === $decoded || '' === $decoded ) {
+				$out['error'] = 'base64';
+				return $out;
+			}
+			$json = $decoded;
+		} else {
+			$json = $raw;
 		}
+
+		$data = self::decode_sheets_json( $json );
 		if ( ! is_array( $data ) ) {
 			$out['error'] = function_exists( 'json_last_error_msg' ) ? json_last_error_msg() : 'json';
 			return $out;
 		}
 		$out['sheets'] = $data;
 		return $out;
+	}
+
+	/**
+	 * Try several slash/encoding variants for legacy broken JSON meta.
+	 *
+	 * @param string $json JSON string.
+	 * @return array|null
+	 */
+	private static function decode_sheets_json( $json ) {
+		$candidates = array(
+			$json,
+			stripslashes( $json ),
+			wp_unslash( $json ),
+			stripslashes( stripslashes( $json ) ),
+		);
+		foreach ( $candidates as $candidate ) {
+			if ( ! is_string( $candidate ) || '' === $candidate ) {
+				continue;
+			}
+			$data = json_decode( $candidate, true );
+			if ( is_array( $data ) ) {
+				return $data;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -860,7 +897,7 @@ class ATEP_Plugin {
 			if ( is_wp_error( $encoded ) ) {
 				return $encoded;
 			}
-			update_post_meta( $replace_id, ATEP_META_SHEETS, $encoded );
+			update_post_meta( $replace_id, ATEP_META_SHEETS, wp_slash( $encoded ) );
 			update_post_meta( $replace_id, ATEP_META_SOURCE, $name );
 			if ( empty( self::read_price_style( $replace_id ) ) ) {
 				$this->write_price_style( $replace_id, self::global_style() );
@@ -892,7 +929,7 @@ class ATEP_Plugin {
 			wp_delete_post( $post_id, true );
 			return $encoded;
 		}
-		update_post_meta( $post_id, ATEP_META_SHEETS, $encoded );
+		update_post_meta( $post_id, ATEP_META_SHEETS, wp_slash( $encoded ) );
 		update_post_meta( $post_id, ATEP_META_SOURCE, $name );
 		$this->write_price_style( $post_id, self::global_style() );
 
@@ -901,7 +938,7 @@ class ATEP_Plugin {
 
 	/**
 	 * @param array $sheets Sheets payload.
-	 * @return string|WP_Error JSON.
+	 * @return string|WP_Error Storage payload (atep64:...).
 	 */
 	private function encode_sheets( $sheets ) {
 		$flags = JSON_UNESCAPED_UNICODE;
@@ -912,7 +949,8 @@ class ATEP_Plugin {
 		if ( false === $encoded || '' === $encoded || 'null' === $encoded ) {
 			return new WP_Error( 'atep_json', __( 'Не удалось сохранить данные файла. Проверьте кодировку Excel (UTF-8).', 'at-excel-price' ) );
 		}
-		return $encoded;
+		// Base64 avoids WordPress slash corruption around quotes in cell text.
+		return 'atep64:' . base64_encode( $encoded );
 	}
 
 	/**
