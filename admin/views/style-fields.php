@@ -72,6 +72,36 @@ if ( empty( $id_prefix ) ) {
 			</td>
 		</tr>
 		<tr>
+			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-tabs-mode"><?php esc_html_e( 'Вкладки', 'at-excel-price' ); ?></label></th>
+			<td>
+				<?php
+				$tabs_mode = isset( $settings['tabs_mode'] ) ? (string) $settings['tabs_mode'] : 'sheets';
+				if ( ! in_array( $tabs_mode, array( 'sheets', 'category' ), true ) ) {
+					$tabs_mode = 'sheets';
+				}
+				?>
+				<select id="<?php echo esc_attr( $id_prefix ); ?>-tabs-mode" name="tabs_mode">
+					<option value="sheets" <?php selected( $tabs_mode, 'sheets' ); ?>><?php esc_html_e( 'По листам Excel', 'at-excel-price' ); ?></option>
+					<option value="category" <?php selected( $tabs_mode, 'category' ); ?>><?php esc_html_e( 'По столбцу «Категория»', 'at-excel-price' ); ?></option>
+				</select>
+				<p class="description"><?php esc_html_e( 'Во втором режиме строки с одной категорией собираются во вкладку с этим названием. Столбец категории в таблице не показывается.', 'at-excel-price' ); ?></p>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-category-column"><?php esc_html_e( 'Имя столбца категории', 'at-excel-price' ); ?></label></th>
+			<td>
+				<input
+					type="text"
+					class="regular-text"
+					id="<?php echo esc_attr( $id_prefix ); ?>-category-column"
+					name="category_column"
+					value="<?php echo esc_attr( isset( $settings['category_column'] ) ? (string) $settings['category_column'] : 'Категория' ); ?>"
+					placeholder="Категория"
+				/>
+				<p class="description"><?php esc_html_e( 'Точное название заголовка в первой строке Excel (без учёта регистра). По умолчанию: Категория.', 'at-excel-price' ); ?></p>
+			</td>
+		</tr>
+		<tr>
 			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-col-mode"><?php esc_html_e( 'Ширина столбцов', 'at-excel-price' ); ?></label></th>
 			<td>
 				<?php

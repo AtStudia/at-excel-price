@@ -66,6 +66,8 @@ class ATEP_Plugin {
 			'zebra'              => 1,
 			'column_width_mode'  => 'auto',
 			'column_widths'      => '',
+			'tabs_mode'          => 'sheets',
+			'category_column'    => 'Категория',
 			'github_repo'        => '',
 			'github_token'       => '',
 		);
@@ -110,6 +112,8 @@ class ATEP_Plugin {
 			'zebra',
 			'column_width_mode',
 			'column_widths',
+			'tabs_mode',
+			'category_column',
 		);
 	}
 
@@ -495,6 +499,145 @@ class ATEP_Plugin {
 		$widths = self::parse_column_widths( isset( $input['column_widths'] ) ? wp_unslash( $input['column_widths'] ) : '' );
 		$out['column_widths'] = empty( $widths ) ? '' : implode( ',', $widths );
 
+		$tabs_mode = isset( $input['tabs_mode'] ) ? sanitize_key( wp_unslash( $input['tabs_mode'] ) ) : 'sheets';
+		if ( ! in_array( $tabs_mode, array( 'sheets', 'category' ), true ) ) {
+			$tabs_mode = 'sheets';
+		}
+		$out['tabs_mode'] = $tabs_mode;
+
+		$cat_col = isset( $input['category_column'] ) ? sanitize_text_field( wp_unslash( $input['category_column'] ) ) : '';
+		$out['category_column'] = '' !== $cat_col ? $cat_col : 'Категория';
+
+		return $out;
+	}
+
+	/**
+	 * Build tabs for front output: by Excel sheets or by category column.
+	 *
+	 * @param array<int, array{name?:string,rows?:array}> $sheets   Stored sheets.
+	 * @param array<string, mixed>                        $settings Price settings.
+	 * @return array<int, array{name:string,rows:array}>
+	 */
+	public static function prepare_display_sheets( $sheets, $settings ) {
+		$mode = isset( $settings['tabs_mode'] ) ? (string) $settings['tabs_mode'] : 'sheets';
+		if ( 'category' !== $mode ) {
+			return is_array( $sheets ) ? $sheets : array();
+		}
+
+		$column = isset( $settings['category_column'] ) ? (string) $settings['category_column'] : 'Категория';
+		$grouped = self::group_sheets_by_category( $sheets, $column );
+		return ! empty( $grouped ) ? $grouped : ( is_array( $sheets ) ? $sheets : array() );
+	}
+
+	/**
+	 * Group all sheet rows by a category column into virtual sheets (tabs).
+	 *
+	 * @param array<int, array{name?:string,rows?:array}> $sheets        Sheets.
+	 * @param string                                      $column_label  Header title to match.
+	 * @return array<int, array{name:string,rows:array}>
+	 */
+	public static function group_sheets_by_category( $sheets, $column_label = 'Категория' ) {
+		if ( ! is_array( $sheets ) || empty( $sheets ) ) {
+			return array();
+		}
+
+		$needle = self::normalize_header_label( $column_label );
+		if ( '' === $needle ) {
+			$needle = self::normalize_header_label( 'Категория' );
+		}
+
+		$groups        = array();
+		$display_header = null;
+
+		foreach ( $sheets as $sheet ) {
+			$rows = isset( $sheet['rows'] ) && is_array( $sheet['rows'] ) ? $sheet['rows'] : array();
+			if ( count( $rows ) < 2 ) {
+				continue;
+			}
+
+			$header = array_values( $rows[0] );
+			$cat_ix = self::find_header_index( $header, $needle );
+			if ( $cat_ix < 0 ) {
+				continue;
+			}
+
+			if ( null === $display_header ) {
+				$display_header = self::row_without_index( $header, $cat_ix );
+			}
+
+			for ( $i = 1, $n = count( $rows ); $i < $n; $i++ ) {
+				$row = isset( $rows[ $i ] ) && is_array( $rows[ $i ] ) ? array_values( $rows[ $i ] ) : array();
+				if ( empty( $row ) ) {
+					continue;
+				}
+
+				$cat = isset( $row[ $cat_ix ] ) ? trim( (string) $row[ $cat_ix ] ) : '';
+				if ( '' === $cat ) {
+					$cat = __( 'Без категории', 'at-excel-price' );
+				}
+
+				if ( ! isset( $groups[ $cat ] ) ) {
+					$groups[ $cat ] = array();
+				}
+				$groups[ $cat ][] = self::row_without_index( $row, $cat_ix );
+			}
+		}
+
+		if ( empty( $groups ) || null === $display_header ) {
+			return array();
+		}
+
+		$result = array();
+		foreach ( $groups as $name => $body_rows ) {
+			$result[] = array(
+				'name' => (string) $name,
+				'rows' => array_merge( array( $display_header ), $body_rows ),
+			);
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @param mixed $label Header label.
+	 * @return string
+	 */
+	private static function normalize_header_label( $label ) {
+		$label = trim( (string) $label );
+		$label = preg_replace( '/\s+/u', ' ', $label );
+		if ( function_exists( 'mb_strtolower' ) ) {
+			return (string) mb_strtolower( (string) $label, 'UTF-8' );
+		}
+		return strtolower( (string) $label );
+	}
+
+	/**
+	 * @param array<int, mixed> $header Header cells.
+	 * @param string            $needle Normalized label.
+	 * @return int Index or -1.
+	 */
+	private static function find_header_index( $header, $needle ) {
+		foreach ( $header as $i => $cell ) {
+			if ( self::normalize_header_label( $cell ) === $needle ) {
+				return (int) $i;
+			}
+		}
+		return -1;
+	}
+
+	/**
+	 * @param array<int, mixed> $row   Cells.
+	 * @param int               $index Index to remove.
+	 * @return array<int, string>
+	 */
+	private static function row_without_index( $row, $index ) {
+		$out = array();
+		foreach ( array_values( $row ) as $i => $cell ) {
+			if ( (int) $i === (int) $index ) {
+				continue;
+			}
+			$out[] = is_scalar( $cell ) ? (string) $cell : '';
+		}
 		return $out;
 	}
 
@@ -746,7 +889,11 @@ class ATEP_Plugin {
 		$this->enqueue_front( true );
 
 		$settings = self::price_settings( $id );
-		$uid      = 'atep-' . $id . '-' . wp_rand( 1000, 9999 );
+		$sheets   = self::prepare_display_sheets( $sheets, $settings );
+		if ( empty( $sheets ) ) {
+			return '';
+		}
+		$uid = 'atep-' . $id . '-' . wp_rand( 1000, 9999 );
 
 		ob_start();
 		include ATEP_DIR . 'public/views/table.php';
