@@ -60,12 +60,14 @@ class ATEP_Plugin {
 			'tab_active_color' => '#f7faf5',
 			'tab_radius'       => 6,
 			'per_page'         => 50,
-			'show_search'      => 1,
-			'show_sort'        => 1,
-			'sticky_header'    => 1,
-			'zebra'            => 1,
-			'github_repo'      => '',
-			'github_token'     => '',
+			'show_search'        => 1,
+			'show_sort'          => 1,
+			'sticky_header'      => 1,
+			'zebra'              => 1,
+			'column_width_mode'  => 'auto',
+			'column_widths'      => '',
+			'github_repo'        => '',
+			'github_token'       => '',
 		);
 	}
 
@@ -106,7 +108,90 @@ class ATEP_Plugin {
 			'show_sort',
 			'sticky_header',
 			'zebra',
+			'column_width_mode',
+			'column_widths',
 		);
+	}
+
+	/**
+	 * Parse "20,60,20" into positive percentages.
+	 *
+	 * @param mixed $raw Raw value.
+	 * @return int[]
+	 */
+	public static function parse_column_widths( $raw ) {
+		$parts = preg_split( '/[,\s;]+/', (string) $raw );
+		$out   = array();
+		if ( ! is_array( $parts ) ) {
+			return $out;
+		}
+		foreach ( $parts as $part ) {
+			$part = trim( (string) $part );
+			if ( '' === $part || ! is_numeric( $part ) ) {
+				continue;
+			}
+			$n = (int) round( (float) $part );
+			if ( $n < 1 ) {
+				continue;
+			}
+			if ( $n > 100 ) {
+				$n = 100;
+			}
+			$out[] = $n;
+			if ( count( $out ) >= 40 ) {
+				break;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Fit width list to column count (sum ≈ 100).
+	 *
+	 * @param int[] $widths Percents.
+	 * @param int   $count  Column count.
+	 * @return int[]
+	 */
+	public static function fit_column_widths( $widths, $count ) {
+		$count = max( 0, (int) $count );
+		if ( $count < 1 ) {
+			return array();
+		}
+
+		$widths = array_values( array_map( 'intval', (array) $widths ) );
+		if ( empty( $widths ) ) {
+			$each = (int) floor( 100 / $count );
+			$out  = array_fill( 0, $count, max( 1, $each ) );
+			$out[ $count - 1 ] += 100 - array_sum( $out );
+			return $out;
+		}
+
+		if ( count( $widths ) > $count ) {
+			$widths = array_slice( $widths, 0, $count );
+		}
+
+		while ( count( $widths ) < $count ) {
+			$widths[] = 1;
+		}
+
+		$sum = array_sum( $widths );
+		if ( $sum < 1 ) {
+			return self::fit_column_widths( array(), $count );
+		}
+
+		$scaled = array();
+		$used   = 0;
+		for ( $i = 0; $i < $count; $i++ ) {
+			if ( $i === $count - 1 ) {
+				$scaled[] = max( 1, 100 - $used );
+				break;
+			}
+			$n        = (int) max( 1, round( ( $widths[ $i ] / $sum ) * 100 ) );
+			$scaled[] = $n;
+			$used    += $n;
+		}
+
+		return $scaled;
 	}
 
 	/**
@@ -400,6 +485,15 @@ class ATEP_Plugin {
 		foreach ( array( 'show_search', 'show_sort', 'sticky_header', 'zebra' ) as $flag ) {
 			$out[ $flag ] = empty( $input[ $flag ] ) ? 0 : 1;
 		}
+
+		$mode = isset( $input['column_width_mode'] ) ? sanitize_key( wp_unslash( $input['column_width_mode'] ) ) : 'auto';
+		if ( ! in_array( $mode, array( 'auto', 'equal', 'manual' ), true ) ) {
+			$mode = 'auto';
+		}
+		$out['column_width_mode'] = $mode;
+
+		$widths = self::parse_column_widths( isset( $input['column_widths'] ) ? wp_unslash( $input['column_widths'] ) : '' );
+		$out['column_widths'] = empty( $widths ) ? '' : implode( ',', $widths );
 
 		return $out;
 	}

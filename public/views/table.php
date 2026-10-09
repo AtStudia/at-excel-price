@@ -30,7 +30,13 @@ $css_vars = sprintf(
 	(int) $settings['tab_radius']
 );
 
-$classes = array( 'atep' );
+$col_mode = isset( $settings['column_width_mode'] ) ? (string) $settings['column_width_mode'] : 'auto';
+if ( ! in_array( $col_mode, array( 'auto', 'equal', 'manual' ), true ) ) {
+	$col_mode = 'auto';
+}
+$manual_widths = ATEP_Plugin::parse_column_widths( isset( $settings['column_widths'] ) ? $settings['column_widths'] : '' );
+
+$classes = array( 'atep', 'atep-cols-' . $col_mode );
 if ( ! empty( $settings['zebra'] ) ) {
 	$classes[] = 'atep-zebra';
 }
@@ -46,6 +52,7 @@ if ( ! empty( $settings['show_sort'] ) ) {
 	class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
 	style="<?php echo esc_attr( $css_vars ); ?>"
 	data-per-page="<?php echo (int) $settings['per_page']; ?>"
+	data-col-mode="<?php echo esc_attr( $col_mode ); ?>"
 >
 	<?php if ( count( $sheets ) > 1 ) : ?>
 		<div class="atep-tabs" role="tablist">
@@ -68,6 +75,15 @@ if ( ! empty( $settings['show_sort'] ) ) {
 		$rows    = isset( $sheet['rows'] ) && is_array( $sheet['rows'] ) ? $sheet['rows'] : array();
 		$header  = ! empty( $rows ) ? array_shift( $rows ) : array();
 		$body_id = $uid . '-body-' . (int) $index;
+		$col_n   = ! empty( $header ) ? count( $header ) : 0;
+		foreach ( $rows as $row ) {
+			if ( is_array( $row ) ) {
+				$col_n = max( $col_n, count( $row ) );
+			}
+		}
+		$sheet_widths = ( 'manual' === $col_mode && $col_n > 0 )
+			? ATEP_Plugin::fit_column_widths( $manual_widths, $col_n )
+			: array();
 		?>
 		<section class="atep-sheet<?php echo 0 === $index ? ' is-active' : ''; ?>" data-atep-sheet="<?php echo (int) $index; ?>" <?php echo 0 === $index ? '' : 'hidden'; ?>>
 			<?php if ( ! empty( $settings['show_search'] ) ) : ?>
@@ -82,6 +98,13 @@ if ( ! empty( $settings['show_sort'] ) ) {
 
 			<div class="atep-scroll">
 				<table class="atep-table">
+					<?php if ( ! empty( $sheet_widths ) ) : ?>
+						<colgroup>
+							<?php foreach ( $sheet_widths as $w ) : ?>
+								<col style="width:<?php echo (int) $w; ?>%" />
+							<?php endforeach; ?>
+						</colgroup>
+					<?php endif; ?>
 					<?php if ( ! empty( $header ) ) : ?>
 						<thead>
 							<tr>

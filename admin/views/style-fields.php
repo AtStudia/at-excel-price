@@ -71,5 +71,36 @@ if ( empty( $id_prefix ) ) {
 				<label><input type="checkbox" name="sticky_header" value="1" <?php checked( $settings['sticky_header'], 1 ); ?> /> <?php esc_html_e( 'Закрепить шапку при прокрутке', 'at-excel-price' ); ?></label>
 			</td>
 		</tr>
+		<tr>
+			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-col-mode"><?php esc_html_e( 'Ширина столбцов', 'at-excel-price' ); ?></label></th>
+			<td>
+				<?php
+				$col_mode = isset( $settings['column_width_mode'] ) ? (string) $settings['column_width_mode'] : 'auto';
+				if ( ! in_array( $col_mode, array( 'auto', 'equal', 'manual' ), true ) ) {
+					$col_mode = 'auto';
+				}
+				?>
+				<select id="<?php echo esc_attr( $id_prefix ); ?>-col-mode" name="column_width_mode">
+					<option value="auto" <?php selected( $col_mode, 'auto' ); ?>><?php esc_html_e( 'Авто по содержимому', 'at-excel-price' ); ?></option>
+					<option value="equal" <?php selected( $col_mode, 'equal' ); ?>><?php esc_html_e( 'Поровну', 'at-excel-price' ); ?></option>
+					<option value="manual" <?php selected( $col_mode, 'manual' ); ?>><?php esc_html_e( 'Вручную (%)', 'at-excel-price' ); ?></option>
+				</select>
+				<p class="description"><?php esc_html_e( 'Авто — узкие код/цена и широкий текст. Поровну — как сетка. Вручную — проценты ниже.', 'at-excel-price' ); ?></p>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-col-widths"><?php esc_html_e( 'Проценты столбцов', 'at-excel-price' ); ?></label></th>
+			<td>
+				<input
+					type="text"
+					class="regular-text"
+					id="<?php echo esc_attr( $id_prefix ); ?>-col-widths"
+					name="column_widths"
+					value="<?php echo esc_attr( isset( $settings['column_widths'] ) ? (string) $settings['column_widths'] : '' ); ?>"
+					placeholder="20,60,20"
+				/>
+				<p class="description"><?php esc_html_e( 'Только для режима «Вручную». Пример для 3 столбцов: 20,60,20. Числа будут приведены к сумме 100%.', 'at-excel-price' ); ?></p>
+			</td>
+		</tr>
 	</table>
 </div>

@@ -97,10 +97,23 @@
 .atep-table {
 	width: 100%;
 	max-width: 100%;
-	table-layout: fixed;
 	border-collapse: separate;
 	border-spacing: 0;
 	background: var(--atep-row-bg);
+}
+
+.atep-cols-auto .atep-table {
+	table-layout: auto;
+}
+
+.atep-cols-equal .atep-table,
+.atep-cols-manual .atep-table {
+	table-layout: fixed;
+}
+
+.atep-cols-auto .atep-table th,
+.atep-cols-auto .atep-table td {
+	width: auto;
 }
 
 .atep-table th,
