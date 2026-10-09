@@ -63,6 +63,7 @@ if ( ! empty( $settings['show_sort'] ) ) {
 					role="tab"
 					aria-selected="<?php echo 0 === $index ? 'true' : 'false'; ?>"
 					data-atep-tab="<?php echo (int) $index; ?>"
+					title="<?php echo esc_attr( $sheet['name'] ); ?>"
 				><?php echo esc_html( $sheet['name'] ); ?></button>
 			<?php endforeach; ?>
 		</div>

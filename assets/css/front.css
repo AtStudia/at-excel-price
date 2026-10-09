@@ -33,6 +33,12 @@
 	flex-wrap: wrap;
 	gap: 6px;
 	margin: 0 0 12px;
+	max-width: 100%;
+}
+
+/* Hide paged-out rows only after JS initialized — avoids blank tables if JS fails. */
+.atep-ready .atep-page-hide {
+	display: none !important;
 }
 
 .atep-tab,
@@ -46,6 +52,13 @@
 	font: inherit;
 	cursor: pointer;
 	line-height: 1.2;
+}
+
+.atep-tab {
+	max-width: min(100%, 320px);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .atep-tab.is-active {

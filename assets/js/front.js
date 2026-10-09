@@ -43,18 +43,22 @@
 
 		function render() {
 			var total = filtered.length;
-			var pages = Math.max(1, Math.ceil(total / perPage));
+			var pages = Math.max(1, Math.ceil(total / perPage) || 1);
 			if (page > pages) {
 				page = pages;
 			}
+			if (page < 1) {
+				page = 1;
+			}
 			var start = (page - 1) * perPage;
 			var end = start + perPage;
+			var onPage = filtered.slice(start, end);
 
 			allRows.forEach(function (row) {
-				row.hidden = true;
+				row.classList.add("atep-page-hide");
 			});
-			filtered.slice(start, end).forEach(function (row) {
-				row.hidden = false;
+			onPage.forEach(function (row) {
+				row.classList.remove("atep-page-hide");
 			});
 
 			if (count) {
@@ -64,8 +68,8 @@
 			}
 
 			if (pager) {
-				var show = total > perPage;
-				pager.hidden = !show;
+				var showPager = total > perPage;
+				pager.hidden = !showPager;
 				if (label) {
 					label.textContent = page + " / " + pages;
 				}
@@ -146,8 +150,13 @@
 
 	function initRoot(root) {
 		var perPage = parseInt(root.getAttribute("data-per-page"), 10) || 50;
+		if (perPage < 1) {
+			perPage = 50;
+		}
 		var tabs = root.querySelectorAll("[data-atep-tab]");
 		var sheets = root.querySelectorAll("[data-atep-sheet]");
+
+		root.classList.add("atep-ready");
 
 		Array.prototype.forEach.call(sheets, function (sheet) {
 			initSheet(sheet, perPage);

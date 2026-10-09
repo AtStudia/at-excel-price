@@ -770,7 +770,11 @@ class ATEP_Plugin {
 				}
 			}
 
-			update_post_meta( $replace_id, ATEP_META_SHEETS, wp_json_encode( $sheets, JSON_UNESCAPED_UNICODE ) );
+			$encoded = $this->encode_sheets( $sheets );
+			if ( is_wp_error( $encoded ) ) {
+				return $encoded;
+			}
+			update_post_meta( $replace_id, ATEP_META_SHEETS, $encoded );
 			update_post_meta( $replace_id, ATEP_META_SOURCE, $name );
 			if ( empty( self::read_price_style( $replace_id ) ) ) {
 				$this->write_price_style( $replace_id, self::global_style() );
@@ -797,11 +801,32 @@ class ATEP_Plugin {
 			return $post_id;
 		}
 
-		update_post_meta( $post_id, ATEP_META_SHEETS, wp_json_encode( $sheets, JSON_UNESCAPED_UNICODE ) );
+		$encoded = $this->encode_sheets( $sheets );
+		if ( is_wp_error( $encoded ) ) {
+			wp_delete_post( $post_id, true );
+			return $encoded;
+		}
+		update_post_meta( $post_id, ATEP_META_SHEETS, $encoded );
 		update_post_meta( $post_id, ATEP_META_SOURCE, $name );
 		$this->write_price_style( $post_id, self::global_style() );
 
 		return (int) $post_id;
+	}
+
+	/**
+	 * @param array $sheets Sheets payload.
+	 * @return string|WP_Error JSON.
+	 */
+	private function encode_sheets( $sheets ) {
+		$flags = JSON_UNESCAPED_UNICODE;
+		if ( defined( 'JSON_INVALID_UTF8_SUBSTITUTE' ) ) {
+			$flags |= JSON_INVALID_UTF8_SUBSTITUTE;
+		}
+		$encoded = wp_json_encode( $sheets, $flags );
+		if ( false === $encoded || '' === $encoded || 'null' === $encoded ) {
+			return new WP_Error( 'atep_json', __( 'Не удалось сохранить данные файла. Проверьте кодировку Excel (UTF-8).', 'at-excel-price' ) );
+		}
+		return $encoded;
 	}
 
 	/**
@@ -909,7 +934,12 @@ class ATEP_Plugin {
 		}
 
 		$raw = get_post_meta( $id, ATEP_META_SHEETS, true );
-		$sheets = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
+		if ( is_string( $raw ) ) {
+			$raw    = wp_unslash( $raw );
+			$sheets = json_decode( $raw, true );
+		} else {
+			$sheets = $raw;
+		}
 		if ( ! is_array( $sheets ) || empty( $sheets ) ) {
 			return '';
 		}
