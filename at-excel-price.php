@@ -1,14 +1,14 @@
 <?php
 /**
  * Plugin Name: AT Excel Price
- * Plugin URI:  https://github.com/at-excel-price
+ * Plugin URI:  https://github.com/AtStudia/at-excel-price
  * Description: Загрузка прайса Excel и вывод на страницу шорткодом [at_excel_price]: вкладки по листам, поиск, сортировка, пагинация и оформление из админки.
  * Version:     1.1.0
  * Author:      AT
  * Text Domain: at-excel-price
  * Requires at least: 5.8
  * Requires PHP: 7.4
- * Update URI:  https://github.com/at-excel-price
+ * Update URI:  https://github.com/AtStudia/at-excel-price
  * License:     GPL-2.0-or-later
  */
 
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'ATEP_VERSION', '1.1.0' );
 
 if ( ! defined( 'ATEP_GITHUB_REPO' ) ) {
-	define( 'ATEP_GITHUB_REPO', '' );
+	define( 'ATEP_GITHUB_REPO', 'AtStudia/at-excel-price' );
 }
 define( 'ATEP_FILE', __FILE__ );
 define( 'ATEP_DIR', plugin_dir_path( __FILE__ ) );
