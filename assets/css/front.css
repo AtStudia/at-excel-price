@@ -46,27 +46,38 @@
 	max-width: min(100%, 420px);
 }
 
-.atep-tabs-select-control {
+.atep select.atep-tabs-select-control {
+	-webkit-appearance: none;
+	-moz-appearance: none;
 	appearance: none;
 	display: block;
 	width: 100%;
 	max-width: 100%;
+	height: auto;
+	min-height: 44px;
+	box-sizing: border-box;
 	border: 1px solid var(--atep-border);
-	background: var(--atep-tab-bg);
-	color: var(--atep-tab-color);
 	border-radius: var(--atep-tab-radius);
-	padding: 10px 36px 10px 14px;
+	color: var(--atep-tab-color);
+	padding: 12px 40px 12px 14px;
+	margin: 0;
 	font: inherit;
-	line-height: 1.3;
+	font-size: var(--atep-font, 14px);
+	line-height: 1.45;
+	vertical-align: middle;
 	cursor: pointer;
+	overflow: visible;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	background-color: var(--atep-tab-bg);
 	background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
 		linear-gradient(135deg, currentColor 50%, transparent 50%);
-	background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
+	background-position: calc(100% - 18px) calc(50% + 1px), calc(100% - 12px) calc(50% + 1px);
 	background-size: 6px 6px, 6px 6px;
 	background-repeat: no-repeat;
 }
 
-.atep-tabs-select-control:focus {
+.atep select.atep-tabs-select-control:focus {
 	outline: 2px solid var(--atep-tab-active-bg);
 	outline-offset: 2px;
 }
