@@ -1,10 +1,13 @@
 <?php
 /**
- * Prices list, upload, preview.
+ * Prices list, upload, preview, per-price style.
  *
- * @var string    $error
- * @var WP_Post[] $prices
- * @var int       $preview_id
+ * @var string               $error
+ * @var WP_Post[]            $prices
+ * @var int                  $preview_id
+ * @var int                  $style_id
+ * @var WP_Post|null         $style_post
+ * @var array<string, mixed> $price_style
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <div class="wrap atep-wrap">
 	<h1><?php esc_html_e( 'AT Excel Price', 'at-excel-price' ); ?></h1>
-	<p class="atep-lead"><?php esc_html_e( 'Загрузите книгу .xlsx. Каждый лист станет вкладкой на странице. Вставка: шорткод из таблицы ниже. Файл можно обновить у существующего прайса — шорткод не изменится.', 'at-excel-price' ); ?></p>
+	<p class="atep-lead"><?php esc_html_e( 'Загрузите книгу .xlsx. Каждый лист станет вкладкой на странице. Вставка: шорткод из таблицы ниже. Файл и оформление прайса можно менять без смены шорткода.', 'at-excel-price' ); ?></p>
 
 	<?php if ( $error ) : ?>
 		<div class="notice notice-error"><p><?php echo esc_html( $error ); ?></p></div>
@@ -27,8 +30,53 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div class="notice notice-success"><p><?php esc_html_e( 'Файл обновлён. Шорткод на страницах менять не нужно.', 'at-excel-price' ); ?></p></div>
 	<?php endif; ?>
 
+	<?php if ( ! empty( $_GET['style_saved'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+		<div class="notice notice-success"><p><?php esc_html_e( 'Оформление этого прайса сохранено.', 'at-excel-price' ); ?></p></div>
+	<?php endif; ?>
+
+	<?php if ( ! empty( $_GET['style_reset'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+		<div class="notice notice-success"><p><?php esc_html_e( 'Оформление прайса сброшено к общим настройкам по умолчанию.', 'at-excel-price' ); ?></p></div>
+	<?php endif; ?>
+
 	<?php if ( ! empty( $_GET['deleted'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 		<div class="notice notice-success"><p><?php esc_html_e( 'Прайс удалён.', 'at-excel-price' ); ?></p></div>
+	<?php endif; ?>
+
+	<?php if ( $style_post ) : ?>
+		<div class="atep-panel atep-price-style">
+			<h2>
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %s: price title */
+						__( 'Оформление: %s', 'at-excel-price' ),
+						get_the_title( $style_post )
+					)
+				);
+				?>
+			</h2>
+			<p class="description"><?php esc_html_e( 'Настройки только для этого прайса. Шорткод не меняется.', 'at-excel-price' ); ?></p>
+			<form method="post">
+				<?php wp_nonce_field( 'atep_save_price_style' ); ?>
+				<input type="hidden" name="atep_action" value="save_price_style" />
+				<input type="hidden" name="price_id" value="<?php echo (int) $style_id; ?>" />
+				<?php
+				$settings  = $price_style;
+				$id_prefix = 'atep-price-' . (int) $style_id;
+				include ATEP_DIR . 'admin/views/style-fields.php';
+				?>
+				<p class="submit atep-style-actions">
+					<?php submit_button( __( 'Сохранить оформление', 'at-excel-price' ), 'primary', 'submit', false ); ?>
+					<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=at-excel-price&preview=' . (int) $style_id ) ); ?>"><?php esc_html_e( 'Закрыть', 'at-excel-price' ); ?></a>
+				</p>
+			</form>
+			<form method="post" class="atep-reset-style" onsubmit="return confirm('<?php echo esc_js( __( 'Сбросить оформление этого прайса к общим настройкам?', 'at-excel-price' ) ); ?>');">
+				<?php wp_nonce_field( 'atep_reset_price_style' ); ?>
+				<input type="hidden" name="atep_action" value="reset_price_style" />
+				<input type="hidden" name="price_id" value="<?php echo (int) $style_id; ?>" />
+				<button type="submit" class="button"><?php esc_html_e( 'Сбросить к общим', 'at-excel-price' ); ?></button>
+			</form>
+		</div>
 	<?php endif; ?>
 
 	<div class="atep-panel">
@@ -90,6 +138,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<td><?php echo esc_html( implode( ', ', $names ) ); ?></td>
 							<td><code class="atep-code"><?php echo esc_html( $code ); ?></code></td>
 							<td class="atep-actions">
+								<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=at-excel-price&style_id=' . (int) $price->ID . '&preview=' . (int) $price->ID ) ); ?>"><?php esc_html_e( 'Настройки', 'at-excel-price' ); ?></a>
 								<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=at-excel-price&preview=' . (int) $price->ID ) ); ?>"><?php esc_html_e( 'Предпросмотр', 'at-excel-price' ); ?></a>
 								<form method="post" class="atep-inline" onsubmit="return confirm('<?php echo esc_js( __( 'Удалить этот прайс?', 'at-excel-price' ) ); ?>');">
 									<?php wp_nonce_field( 'atep_delete_price' ); ?>
@@ -108,7 +157,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<label class="screen-reader-text" for="atep-replace-<?php echo (int) $price->ID; ?>"><?php esc_html_e( 'Новый файл Excel', 'at-excel-price' ); ?></label>
 									<input type="file" id="atep-replace-<?php echo (int) $price->ID; ?>" name="price_file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required />
 									<button type="submit" class="button"><?php esc_html_e( 'Обновить файл', 'at-excel-price' ); ?></button>
-									<span class="description"><?php esc_html_e( 'Заменит данные прайса. Шорткод останется тем же.', 'at-excel-price' ); ?></span>
+									<span class="description"><?php esc_html_e( 'Заменит данные прайса. Шорткод и оформление останутся.', 'at-excel-price' ); ?></span>
 								</form>
 							</td>
 						</tr>

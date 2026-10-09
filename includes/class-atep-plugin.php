@@ -80,6 +80,98 @@ class ATEP_Plugin {
 		return array_merge( self::defaults(), $saved );
 	}
 
+	/**
+	 * Style keys shared by global defaults and per-price settings.
+	 *
+	 * @return string[]
+	 */
+	public static function style_keys() {
+		return array(
+			'header_bg',
+			'header_color',
+			'row_bg',
+			'row_color',
+			'alt_bg',
+			'alt_color',
+			'border_color',
+			'row_height',
+			'font_size',
+			'tab_bg',
+			'tab_color',
+			'tab_active_bg',
+			'tab_active_color',
+			'tab_radius',
+			'per_page',
+			'show_search',
+			'show_sort',
+			'sticky_header',
+			'zebra',
+		);
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public static function style_defaults() {
+		return array_intersect_key( self::defaults(), array_flip( self::style_keys() ) );
+	}
+
+	/**
+	 * Global style defaults used for new prices.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function global_style() {
+		return array_merge(
+			self::style_defaults(),
+			array_intersect_key( self::settings(), array_flip( self::style_keys() ) )
+		);
+	}
+
+	/**
+	 * Effective style for one price table.
+	 *
+	 * @param int $post_id Price ID.
+	 * @return array<string, mixed>
+	 */
+	public static function price_settings( $post_id ) {
+		$saved = self::read_price_style( $post_id );
+		if ( empty( $saved ) ) {
+			return self::global_style();
+		}
+		return array_merge( self::style_defaults(), array_intersect_key( $saved, self::style_defaults() ) );
+	}
+
+	/**
+	 * @param int $post_id Price ID.
+	 * @return array<string, mixed>
+	 */
+	private static function read_price_style( $post_id ) {
+		$raw = get_post_meta( (int) $post_id, ATEP_META_STYLE, true );
+		if ( is_array( $raw ) ) {
+			return $raw;
+		}
+		if ( is_string( $raw ) && '' !== $raw ) {
+			$decoded = json_decode( $raw, true );
+			if ( is_array( $decoded ) ) {
+				return $decoded;
+			}
+		}
+		return array();
+	}
+
+	/**
+	 * @param int                  $post_id Price ID.
+	 * @param array<string, mixed> $style   Style values.
+	 */
+	private function write_price_style( $post_id, $style ) {
+		update_post_meta(
+			(int) $post_id,
+			ATEP_META_STYLE,
+			wp_json_encode( $style, JSON_UNESCAPED_UNICODE )
+		);
+	}
+
 	public function register_cpt() {
 		register_post_type(
 			'atep_price',
@@ -121,8 +213,8 @@ class ATEP_Plugin {
 
 		add_submenu_page(
 			'at-excel-price',
-			__( 'Оформление', 'at-excel-price' ),
-			__( 'Оформление', 'at-excel-price' ),
+			__( 'По умолчанию', 'at-excel-price' ),
+			__( 'По умолчанию', 'at-excel-price' ),
 			'manage_options',
 			'at-excel-price-style',
 			array( $this, 'render_style_page' )
@@ -199,6 +291,30 @@ class ATEP_Plugin {
 			exit;
 		}
 
+		if ( 'save_price_style' === $action ) {
+			check_admin_referer( 'atep_save_price_style' );
+			$id   = isset( $_POST['price_id'] ) ? (int) $_POST['price_id'] : 0;
+			$post = get_post( $id );
+			if ( ! $post || 'atep_price' !== $post->post_type ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=at-excel-price' ) );
+				exit;
+			}
+			$this->write_price_style( $id, $this->sanitize_style_input( $_POST ) );
+			wp_safe_redirect( admin_url( 'admin.php?page=at-excel-price&style_saved=1&style_id=' . $id . '&preview=' . $id ) );
+			exit;
+		}
+
+		if ( 'reset_price_style' === $action ) {
+			check_admin_referer( 'atep_reset_price_style' );
+			$id   = isset( $_POST['price_id'] ) ? (int) $_POST['price_id'] : 0;
+			$post = get_post( $id );
+			if ( $post && 'atep_price' === $post->post_type ) {
+				$this->write_price_style( $id, self::global_style() );
+			}
+			wp_safe_redirect( admin_url( 'admin.php?page=at-excel-price&style_reset=1&style_id=' . $id . '&preview=' . $id ) );
+			exit;
+		}
+
 		if ( 'upload_price' === $action ) {
 			check_admin_referer( 'atep_upload_price' );
 			$result = $this->import_upload( 0 );
@@ -240,8 +356,8 @@ class ATEP_Plugin {
 	 * @param array<string, mixed> $input Raw POST.
 	 * @return array<string, mixed>
 	 */
-	private function sanitize_settings( $input ) {
-		$defaults = self::defaults();
+	private function sanitize_style_input( $input ) {
+		$defaults = self::style_defaults();
 		$out      = $defaults;
 
 		$colors = array(
@@ -259,7 +375,7 @@ class ATEP_Plugin {
 		);
 
 		foreach ( $colors as $key ) {
-			$raw = isset( $input[ $key ] ) ? sanitize_hex_color( wp_unslash( $input[ $key ] ) ) : '';
+			$raw         = isset( $input[ $key ] ) ? sanitize_hex_color( wp_unslash( $input[ $key ] ) ) : '';
 			$out[ $key ] = $raw ? $raw : $defaults[ $key ];
 		}
 
@@ -272,7 +388,17 @@ class ATEP_Plugin {
 			$out[ $flag ] = empty( $input[ $flag ] ) ? 0 : 1;
 		}
 
-		$repo = isset( $input['github_repo'] ) ? wp_unslash( $input['github_repo'] ) : '';
+		return $out;
+	}
+
+	/**
+	 * @param array<string, mixed> $input Raw POST.
+	 * @return array<string, mixed>
+	 */
+	private function sanitize_settings( $input ) {
+		$out = array_merge( self::defaults(), $this->sanitize_style_input( $input ) );
+
+		$repo               = isset( $input['github_repo'] ) ? wp_unslash( $input['github_repo'] ) : '';
 		$out['github_repo'] = ATEP_Updater::sanitize_repo( $repo );
 
 		$prev  = self::settings();
@@ -368,6 +494,9 @@ class ATEP_Plugin {
 
 			update_post_meta( $replace_id, ATEP_META_SHEETS, wp_json_encode( $sheets, JSON_UNESCAPED_UNICODE ) );
 			update_post_meta( $replace_id, ATEP_META_SOURCE, $name );
+			if ( empty( self::read_price_style( $replace_id ) ) ) {
+				$this->write_price_style( $replace_id, self::global_style() );
+			}
 
 			return $replace_id;
 		}
@@ -392,6 +521,7 @@ class ATEP_Plugin {
 
 		update_post_meta( $post_id, ATEP_META_SHEETS, wp_json_encode( $sheets, JSON_UNESCAPED_UNICODE ) );
 		update_post_meta( $post_id, ATEP_META_SOURCE, $name );
+		$this->write_price_style( $post_id, self::global_style() );
 
 		return (int) $post_id;
 	}
@@ -458,6 +588,13 @@ class ATEP_Plugin {
 		);
 
 		$preview_id = isset( $_GET['preview'] ) ? (int) $_GET['preview'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$style_id   = isset( $_GET['style_id'] ) ? (int) $_GET['style_id'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$style_post = $style_id ? get_post( $style_id ) : null;
+		if ( ! $style_post || 'atep_price' !== $style_post->post_type ) {
+			$style_id   = 0;
+			$style_post = null;
+		}
+		$price_style = $style_id ? self::price_settings( $style_id ) : array();
 
 		include ATEP_DIR . 'admin/views/prices.php';
 	}
@@ -501,7 +638,7 @@ class ATEP_Plugin {
 
 		$this->enqueue_front( true );
 
-		$settings = self::settings();
+		$settings = self::price_settings( $id );
 		$uid      = 'atep-' . $id . '-' . wp_rand( 1000, 9999 );
 
 		ob_start();

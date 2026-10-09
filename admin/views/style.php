@@ -1,6 +1,6 @@
 <?php
 /**
- * Appearance settings.
+ * Global appearance defaults + GitHub updates.
  *
  * @var array<string, mixed> $settings
  */
@@ -9,23 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$fields = array(
-	'header_bg'        => __( 'Фон шапки таблицы', 'at-excel-price' ),
-	'header_color'     => __( 'Текст шапки', 'at-excel-price' ),
-	'row_bg'           => __( 'Фон строки', 'at-excel-price' ),
-	'row_color'        => __( 'Текст строки', 'at-excel-price' ),
-	'alt_bg'           => __( 'Фон чередующейся строки', 'at-excel-price' ),
-	'alt_color'        => __( 'Текст чередующейся строки', 'at-excel-price' ),
-	'border_color'     => __( 'Цвет границ', 'at-excel-price' ),
-	'tab_bg'           => __( 'Фон вкладки', 'at-excel-price' ),
-	'tab_color'        => __( 'Текст вкладки', 'at-excel-price' ),
-	'tab_active_bg'    => __( 'Фон активной вкладки', 'at-excel-price' ),
-	'tab_active_color' => __( 'Текст активной вкладки', 'at-excel-price' ),
-);
+$id_prefix = 'atep';
 ?>
 <div class="wrap atep-wrap">
-	<h1><?php esc_html_e( 'Оформление таблиц', 'at-excel-price' ); ?></h1>
-	<p class="atep-lead"><?php esc_html_e( 'Настройки общие для всех шорткодов на сайте.', 'at-excel-price' ); ?></p>
+	<h1><?php esc_html_e( 'Оформление по умолчанию', 'at-excel-price' ); ?></h1>
+	<p class="atep-lead"><?php esc_html_e( 'Эти значения копируются в новый прайс при загрузке. Уже созданные таблицы настраиваются отдельно: Прайсы → Настройки.', 'at-excel-price' ); ?></p>
 
 	<?php if ( ! empty( $_GET['updated'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 		<div class="notice notice-success"><p><?php esc_html_e( 'Настройки сохранены.', 'at-excel-price' ); ?></p></div>
@@ -39,51 +27,7 @@ $fields = array(
 		<?php wp_nonce_field( 'atep_save_style' ); ?>
 		<input type="hidden" name="atep_action" value="save_style" />
 
-		<div class="atep-panel">
-			<h2><?php esc_html_e( 'Цвета', 'at-excel-price' ); ?></h2>
-			<table class="form-table" role="presentation">
-				<?php foreach ( $fields as $key => $label ) : ?>
-					<tr>
-						<th scope="row"><label for="atep-<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></label></th>
-						<td><input type="color" id="atep-<?php echo esc_attr( $key ); ?>" name="<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $settings[ $key ] ); ?>" /></td>
-					</tr>
-				<?php endforeach; ?>
-			</table>
-		</div>
-
-		<div class="atep-panel">
-			<h2><?php esc_html_e( 'Размеры и поведение', 'at-excel-price' ); ?></h2>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><label for="atep-row-height"><?php esc_html_e( 'Высота строк, px', 'at-excel-price' ); ?></label></th>
-					<td><input type="number" min="24" max="96" id="atep-row-height" name="row_height" value="<?php echo (int) $settings['row_height']; ?>" /></td>
-				</tr>
-				<tr>
-					<th scope="row"><label for="atep-font-size"><?php esc_html_e( 'Размер шрифта, px', 'at-excel-price' ); ?></label></th>
-					<td><input type="number" min="11" max="22" id="atep-font-size" name="font_size" value="<?php echo (int) $settings['font_size']; ?>" /></td>
-				</tr>
-				<tr>
-					<th scope="row"><label for="atep-tab-radius"><?php esc_html_e( 'Скругление вкладок, px', 'at-excel-price' ); ?></label></th>
-					<td><input type="number" min="0" max="24" id="atep-tab-radius" name="tab_radius" value="<?php echo (int) $settings['tab_radius']; ?>" /></td>
-				</tr>
-				<tr>
-					<th scope="row"><label for="atep-per-page"><?php esc_html_e( 'Строк на странице', 'at-excel-price' ); ?></label></th>
-					<td>
-						<input type="number" min="10" max="500" id="atep-per-page" name="per_page" value="<?php echo (int) $settings['per_page']; ?>" />
-						<p class="description"><?php esc_html_e( 'Первая строка листа считается заголовком и не уходит в пагинацию.', 'at-excel-price' ); ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Опции', 'at-excel-price' ); ?></th>
-					<td>
-						<label><input type="checkbox" name="zebra" value="1" <?php checked( $settings['zebra'], 1 ); ?> /> <?php esc_html_e( 'Чередовать фон строк', 'at-excel-price' ); ?></label><br />
-						<label><input type="checkbox" name="show_search" value="1" <?php checked( $settings['show_search'], 1 ); ?> /> <?php esc_html_e( 'Поиск по строкам', 'at-excel-price' ); ?></label><br />
-						<label><input type="checkbox" name="show_sort" value="1" <?php checked( $settings['show_sort'], 1 ); ?> /> <?php esc_html_e( 'Сортировка по клику на столбец', 'at-excel-price' ); ?></label><br />
-						<label><input type="checkbox" name="sticky_header" value="1" <?php checked( $settings['sticky_header'], 1 ); ?> /> <?php esc_html_e( 'Закрепить шапку при прокрутке', 'at-excel-price' ); ?></label>
-					</td>
-				</tr>
-			</table>
-		</div>
+		<?php include ATEP_DIR . 'admin/views/style-fields.php'; ?>
 
 		<div class="atep-panel">
 			<h2><?php esc_html_e( 'Обновления с GitHub', 'at-excel-price' ); ?></h2>

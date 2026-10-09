@@ -56,3 +56,18 @@
 .atep-preview .atep {
 	margin-top: 8px;
 }
+
+.atep-price-style {
+	border-color: #1f4b3a;
+}
+
+.atep-style-actions {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.atep-reset-style {
+	margin: 0 0 12px;
+}
