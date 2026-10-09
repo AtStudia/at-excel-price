@@ -519,14 +519,19 @@ class ATEP_Plugin {
 	 * @return array<int, array{name:string,rows:array}>
 	 */
 	public static function prepare_display_sheets( $sheets, $settings ) {
-		$mode = isset( $settings['tabs_mode'] ) ? (string) $settings['tabs_mode'] : 'sheets';
-		if ( 'category' !== $mode ) {
-			return is_array( $sheets ) ? $sheets : array();
+		if ( ! is_array( $sheets ) ) {
+			return array();
 		}
 
-		$column = isset( $settings['category_column'] ) ? (string) $settings['category_column'] : 'Категория';
+		$mode = isset( $settings['tabs_mode'] ) ? (string) $settings['tabs_mode'] : 'sheets';
+		if ( 'category' !== $mode ) {
+			return $sheets;
+		}
+
+		$column  = isset( $settings['category_column'] ) ? (string) $settings['category_column'] : 'Категория';
 		$grouped = self::group_sheets_by_category( $sheets, $column );
-		return ! empty( $grouped ) ? $grouped : ( is_array( $sheets ) ? $sheets : array() );
+		// If the category column is missing, keep the original sheets so the table still shows.
+		return ! empty( $grouped ) ? $grouped : $sheets;
 	}
 
 	/**
@@ -603,12 +608,22 @@ class ATEP_Plugin {
 	 * @return string
 	 */
 	private static function normalize_header_label( $label ) {
-		$label = trim( (string) $label );
-		$label = preg_replace( '/\s+/u', ' ', $label );
-		if ( function_exists( 'mb_strtolower' ) ) {
-			return (string) mb_strtolower( (string) $label, 'UTF-8' );
+		$label = (string) $label;
+		// BOM, NBSP, zero-width spaces.
+		$label = str_replace(
+			array( "\xEF\xBB\xBF", "\xC2\xA0", "\xE2\x80\x8B", "\xE2\x80\x8C", "\xE2\x80\x8D" ),
+			array( '', ' ', '', '', '' ),
+			$label
+		);
+		$label = trim( $label );
+		$collapsed = preg_replace( '/\s+/', ' ', $label );
+		if ( is_string( $collapsed ) ) {
+			$label = $collapsed;
 		}
-		return strtolower( (string) $label );
+		if ( function_exists( 'mb_strtolower' ) ) {
+			return (string) mb_strtolower( $label, 'UTF-8' );
+		}
+		return strtolower( $label );
 	}
 
 	/**
@@ -617,8 +632,21 @@ class ATEP_Plugin {
 	 * @return int Index or -1.
 	 */
 	private static function find_header_index( $header, $needle ) {
+		$needle = (string) $needle;
 		foreach ( $header as $i => $cell ) {
 			if ( self::normalize_header_label( $cell ) === $needle ) {
+				return (int) $i;
+			}
+		}
+		foreach ( $header as $i => $cell ) {
+			$n = self::normalize_header_label( $cell );
+			if ( '' === $n ) {
+				continue;
+			}
+			if ( '' !== $needle && false !== strpos( $n, $needle ) ) {
+				return (int) $i;
+			}
+			if ( false !== strpos( $n, 'категор' ) || false !== strpos( $n, 'categor' ) ) {
 				return (int) $i;
 			}
 		}

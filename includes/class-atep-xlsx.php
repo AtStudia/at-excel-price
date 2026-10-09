@@ -200,15 +200,19 @@ class ATEP_XLSX {
 		$rows = array();
 
 		foreach ( $doc->getElementsByTagName( 'row' ) as $row ) {
-			$cells   = array();
-			$max_col = 0;
+			$cells    = array();
+			$max_col  = 0;
+			$next_col = 0;
 
 			foreach ( $row->getElementsByTagName( 'c' ) as $cell ) {
+				// Some writers omit r="A1"; fall back to sequential columns.
 				$ref = $cell->getAttribute( 'r' );
-				$col = self::column_index( $ref );
+				$col = ( '' !== $ref ) ? self::column_index( $ref ) : -1;
 				if ( $col < 0 ) {
-					continue;
+					$col = $next_col;
 				}
+				$next_col = $col + 1;
+
 				$cells[ $col ] = self::cell_value( $cell, $shared );
 				if ( $col > $max_col ) {
 					$max_col = $col;
