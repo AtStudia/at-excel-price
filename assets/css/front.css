@@ -17,8 +17,8 @@
 	display: block;
 	width: 100%;
 	max-width: 100%;
-	font-size: var(--atep-font);
-	color: var(--atep-row-color);
+	font-size: var(--atep-font, 14px);
+	color: var(--atep-row-color, #1c241c);
 	line-height: 1.35;
 }
 
@@ -175,8 +175,8 @@
 }
 
 .atep-table td {
-	background: var(--atep-row-bg);
-	color: var(--atep-row-color);
+	background: var(--atep-row-bg, #ffffff);
+	color: var(--atep-row-color, #1c241c);
 }
 
 .atep-zebra .atep-table tbody tr:nth-child(even) td {

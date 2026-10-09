@@ -120,8 +120,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<?php foreach ( $prices as $price ) : ?>
 						<?php
 						$source = (string) get_post_meta( $price->ID, ATEP_META_SOURCE, true );
-						$raw    = get_post_meta( $price->ID, ATEP_META_SHEETS, true );
-						$data   = is_string( $raw ) ? json_decode( $raw, true ) : array();
+						$loaded = ATEP_Plugin::load_sheets_meta( $price->ID );
+						$data   = $loaded['sheets'];
 						$names  = array();
 						if ( is_array( $data ) ) {
 							foreach ( $data as $sheet ) {
@@ -170,6 +170,48 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php if ( $preview_id ) : ?>
 		<div class="atep-panel atep-preview">
 			<h2><?php esc_html_e( 'Предпросмотр', 'at-excel-price' ); ?></h2>
+			<?php
+			$diag     = ATEP_Plugin::load_sheets_meta( $preview_id );
+			$ps       = ATEP_Plugin::price_settings( $preview_id );
+			$row_sum  = 0;
+			$tab_names = array();
+			if ( ! empty( $diag['sheets'] ) && is_array( $diag['sheets'] ) ) {
+				$display = ATEP_Plugin::prepare_display_sheets( $diag['sheets'], $ps );
+				foreach ( $display as $sh ) {
+					$tab_names[] = isset( $sh['name'] ) ? (string) $sh['name'] : '';
+					if ( ! empty( $sh['rows'] ) && is_array( $sh['rows'] ) ) {
+						$row_sum += max( 0, count( $sh['rows'] ) - 1 );
+					}
+				}
+			}
+			?>
+			<p class="description">
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: 1: meta bytes, 2: tabs, 3: data rows, 4: tabs mode */
+						__( 'Диагностика: meta %1$d байт, вкладок %2$d, строк данных %3$d, режим «%4$s».', 'at-excel-price' ),
+						(int) $diag['raw_len'],
+						count( $tab_names ),
+						(int) $row_sum,
+						isset( $ps['tabs_mode'] ) ? (string) $ps['tabs_mode'] : 'sheets'
+					)
+				);
+				if ( ! empty( $diag['error'] ) ) {
+					echo ' ';
+					echo esc_html(
+						sprintf(
+							/* translators: %s: error */
+							__( 'Ошибка данных: %s', 'at-excel-price' ),
+							$diag['error']
+						)
+					);
+				}
+				?>
+			</p>
+			<?php if ( ! empty( $tab_names ) ) : ?>
+				<p class="description"><?php echo esc_html( implode( ' | ', array_slice( $tab_names, 0, 12 ) ) ); ?></p>
+			<?php endif; ?>
 			<?php echo do_shortcode( '[at_excel_price id="' . (int) $preview_id . '"]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</div>
 	<?php endif; ?>

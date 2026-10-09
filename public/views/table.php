@@ -12,6 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$settings = ATEP_Plugin::normalize_settings( $settings );
+
 $css_vars = sprintf(
 	'--atep-header-bg:%1$s;--atep-header-color:%2$s;--atep-row-bg:%3$s;--atep-row-color:%4$s;--atep-alt-bg:%5$s;--atep-alt-color:%6$s;--atep-border:%7$s;--atep-row-h:%8$dpx;--atep-font:%9$dpx;--atep-tab-bg:%10$s;--atep-tab-color:%11$s;--atep-tab-active-bg:%12$s;--atep-tab-active-color:%13$s;--atep-tab-radius:%14$dpx;',
 	esc_attr( $settings['header_bg'] ),

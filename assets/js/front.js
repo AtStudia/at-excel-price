@@ -156,11 +156,12 @@
 		var tabs = root.querySelectorAll("[data-atep-tab]");
 		var sheets = root.querySelectorAll("[data-atep-sheet]");
 
-		root.classList.add("atep-ready");
-
 		Array.prototype.forEach.call(sheets, function (sheet) {
 			initSheet(sheet, perPage);
 		});
+
+		// Mark ready only after rows were paged — otherwise a mid-init error can hide everything.
+		root.classList.add("atep-ready");
 
 		Array.prototype.forEach.call(tabs, function (tab) {
 			tab.addEventListener("click", function () {

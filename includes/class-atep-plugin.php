@@ -81,7 +81,61 @@ class ATEP_Plugin {
 		if ( ! is_array( $saved ) ) {
 			$saved = array();
 		}
-		return array_merge( self::defaults(), $saved );
+		return self::normalize_settings( array_merge( self::defaults(), $saved ) );
+	}
+
+	/**
+	 * Color option keys.
+	 *
+	 * @return string[]
+	 */
+	public static function color_keys() {
+		return array(
+			'header_bg',
+			'header_color',
+			'row_bg',
+			'row_color',
+			'alt_bg',
+			'alt_color',
+			'border_color',
+			'tab_bg',
+			'tab_color',
+			'tab_active_bg',
+			'tab_active_color',
+		);
+	}
+
+	/**
+	 * Replace empty/invalid values with defaults (empty colors make the table invisible).
+	 *
+	 * @param array<string, mixed> $settings Settings.
+	 * @return array<string, mixed>
+	 */
+	public static function normalize_settings( $settings ) {
+		$defaults = self::defaults();
+		if ( ! is_array( $settings ) ) {
+			return $defaults;
+		}
+		$out = array_merge( $defaults, $settings );
+		foreach ( self::color_keys() as $key ) {
+			$raw = isset( $out[ $key ] ) ? sanitize_hex_color( (string) $out[ $key ] ) : '';
+			$out[ $key ] = $raw ? $raw : $defaults[ $key ];
+		}
+		foreach ( array( 'row_height', 'font_size', 'tab_radius', 'per_page' ) as $key ) {
+			if ( empty( $out[ $key ] ) || (int) $out[ $key ] < 1 ) {
+				$out[ $key ] = $defaults[ $key ];
+			}
+		}
+		if ( empty( $out['column_width_mode'] ) || ! in_array( (string) $out['column_width_mode'], array( 'auto', 'equal', 'manual' ), true ) ) {
+			$out['column_width_mode'] = 'auto';
+		}
+		if ( empty( $out['tabs_mode'] ) || ! in_array( (string) $out['tabs_mode'], array( 'sheets', 'category' ), true ) ) {
+			$out['tabs_mode'] = 'sheets';
+		}
+		if ( empty( $out['category_column'] ) ) {
+			$out['category_column'] = 'Категория';
+		}
+		return $out;
 	}
 
 	/**
@@ -211,10 +265,7 @@ class ATEP_Plugin {
 	 * @return array<string, mixed>
 	 */
 	public static function global_style() {
-		return array_merge(
-			self::style_defaults(),
-			array_intersect_key( self::settings(), array_flip( self::style_keys() ) )
-		);
+		return array_intersect_key( self::settings(), array_flip( self::style_keys() ) );
 	}
 
 	/**
@@ -228,7 +279,42 @@ class ATEP_Plugin {
 		if ( empty( $saved ) ) {
 			return self::global_style();
 		}
-		return array_merge( self::style_defaults(), array_intersect_key( $saved, self::style_defaults() ) );
+		$merged = array_merge( self::style_defaults(), array_intersect_key( $saved, self::style_defaults() ) );
+		return self::normalize_settings( array_merge( self::defaults(), $merged ) );
+	}
+
+	/**
+	 * Decode stored sheets JSON from post meta.
+	 *
+	 * @param int $post_id Price ID.
+	 * @return array{sheets:array,error:string,raw_len:int}
+	 */
+	public static function load_sheets_meta( $post_id ) {
+		$raw = get_post_meta( (int) $post_id, ATEP_META_SHEETS, true );
+		$out = array(
+			'sheets'  => array(),
+			'error'   => '',
+			'raw_len' => is_string( $raw ) ? strlen( $raw ) : ( is_array( $raw ) ? count( $raw ) : 0 ),
+		);
+		if ( is_array( $raw ) ) {
+			$out['sheets'] = $raw;
+			return $out;
+		}
+		if ( ! is_string( $raw ) || '' === $raw ) {
+			$out['error'] = 'empty';
+			return $out;
+		}
+		$json = wp_unslash( $raw );
+		$data = json_decode( $json, true );
+		if ( ! is_array( $data ) ) {
+			$data = json_decode( stripslashes( $json ), true );
+		}
+		if ( ! is_array( $data ) ) {
+			$out['error'] = function_exists( 'json_last_error_msg' ) ? json_last_error_msg() : 'json';
+			return $out;
+		}
+		$out['sheets'] = $data;
+		return $out;
 	}
 
 	/**
@@ -933,14 +1019,12 @@ class ATEP_Plugin {
 			return '';
 		}
 
-		$raw = get_post_meta( $id, ATEP_META_SHEETS, true );
-		if ( is_string( $raw ) ) {
-			$raw    = wp_unslash( $raw );
-			$sheets = json_decode( $raw, true );
-		} else {
-			$sheets = $raw;
-		}
+		$loaded = self::load_sheets_meta( $id );
+		$sheets = $loaded['sheets'];
 		if ( ! is_array( $sheets ) || empty( $sheets ) ) {
+			if ( is_admin() ) {
+				return '<div class="notice notice-warning"><p>' . esc_html__( 'Нет данных таблицы для этого прайса. Загрузите Excel-файл заново.', 'at-excel-price' ) . '</p></div>';
+			}
 			return '';
 		}
 
@@ -949,12 +1033,16 @@ class ATEP_Plugin {
 		$settings = self::price_settings( $id );
 		$sheets   = self::prepare_display_sheets( $sheets, $settings );
 		if ( empty( $sheets ) ) {
+			if ( is_admin() ) {
+				return '<div class="notice notice-warning"><p>' . esc_html__( 'Данные есть, но вкладки не собрались. Проверьте режим вкладок и имя столбца категории.', 'at-excel-price' ) . '</p></div>';
+			}
 			return '';
 		}
 		$uid = 'atep-' . $id . '-' . wp_rand( 1000, 9999 );
 
 		ob_start();
 		include ATEP_DIR . 'public/views/table.php';
-		return (string) ob_get_clean();
+		$html = (string) ob_get_clean();
+		return $html;
 	}
 }
