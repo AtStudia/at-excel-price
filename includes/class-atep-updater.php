@@ -82,6 +82,7 @@ class ATEP_Updater {
 			'id'           => 'https://github.com/' . self::repo(),
 			'slug'         => 'at-excel-price',
 			'plugin'       => plugin_basename( ATEP_FILE ),
+			'version'      => $remote['version'],
 			'new_version'  => $remote['version'],
 			'url'          => $remote['url'],
 			'package'      => $remote['package'],
