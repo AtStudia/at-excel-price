@@ -3,7 +3,7 @@
  * Plugin Name: AT Excel Price
  * Plugin URI:  https://github.com/AtStudia/at-excel-price
  * Description: Загрузка прайса Excel и вывод на страницу шорткодом [at_excel_price]: вкладки по листам, поиск, сортировка, пагинация и оформление из админки.
- * Version:     1.3.1
+ * Version:     1.3.2
  * Author:      AT
  * Text Domain: at-excel-price
  * Requires at least: 5.8
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATEP_VERSION', '1.3.1' );
+define( 'ATEP_VERSION', '1.3.2' );
 
 if ( ! defined( 'ATEP_GITHUB_REPO' ) ) {
 	define( 'ATEP_GITHUB_REPO', 'AtStudia/at-excel-price' );

@@ -13,10 +13,19 @@
 	--atep-tab-active-bg: #1f4b3a;
 	--atep-tab-active-color: #f7faf5;
 	--atep-tab-radius: 6px;
+	box-sizing: border-box;
+	display: block;
+	width: 100%;
+	max-width: 100%;
 	font-size: var(--atep-font);
 	color: var(--atep-row-color);
 	line-height: 1.35;
-	max-width: 100%;
+}
+
+.atep *,
+.atep *::before,
+.atep *::after {
+	box-sizing: border-box;
 }
 
 .atep-tabs {
@@ -74,14 +83,21 @@
 	font-size: 0.92em;
 }
 
+.atep-sheet,
 .atep-scroll {
-	overflow: auto;
+	width: 100%;
 	max-width: 100%;
+}
+
+.atep-scroll {
+	overflow-x: auto;
 	border: 1px solid var(--atep-border);
 }
 
 .atep-table {
 	width: 100%;
+	max-width: 100%;
+	table-layout: fixed;
 	border-collapse: separate;
 	border-spacing: 0;
 	background: var(--atep-row-bg);
@@ -89,13 +105,17 @@
 
 .atep-table th,
 .atep-table td {
-	padding: 0 12px;
-	height: var(--atep-row-h);
+	padding: 8px 12px;
+	min-height: var(--atep-row-h);
+	height: auto;
 	border-bottom: 1px solid var(--atep-border);
 	border-right: 1px solid var(--atep-border);
 	text-align: left;
 	vertical-align: middle;
-	white-space: nowrap;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	hyphens: auto;
 }
 
 .atep-table th:last-child,
@@ -157,6 +177,6 @@
 @media (max-width: 640px) {
 	.atep-table th,
 	.atep-table td {
-		white-space: normal;
+		padding: 8px 10px;
 	}
 }
