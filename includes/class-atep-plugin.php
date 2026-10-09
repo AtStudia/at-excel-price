@@ -67,6 +67,7 @@ class ATEP_Plugin {
 			'column_width_mode'  => 'auto',
 			'column_widths'      => '',
 			'tabs_mode'          => 'sheets',
+			'tabs_ui'            => 'buttons',
 			'category_column'    => 'Категория',
 			'github_repo'        => '',
 			'github_token'       => '',
@@ -132,6 +133,9 @@ class ATEP_Plugin {
 		if ( empty( $out['tabs_mode'] ) || ! in_array( (string) $out['tabs_mode'], array( 'sheets', 'category' ), true ) ) {
 			$out['tabs_mode'] = 'sheets';
 		}
+		if ( empty( $out['tabs_ui'] ) || ! in_array( (string) $out['tabs_ui'], array( 'buttons', 'select' ), true ) ) {
+			$out['tabs_ui'] = 'buttons';
+		}
 		if ( empty( $out['category_column'] ) ) {
 			$out['category_column'] = 'Категория';
 		}
@@ -167,6 +171,7 @@ class ATEP_Plugin {
 			'column_width_mode',
 			'column_widths',
 			'tabs_mode',
+			'tabs_ui',
 			'category_column',
 		);
 	}
@@ -627,6 +632,12 @@ class ATEP_Plugin {
 			$tabs_mode = 'sheets';
 		}
 		$out['tabs_mode'] = $tabs_mode;
+
+		$tabs_ui = isset( $input['tabs_ui'] ) ? sanitize_key( wp_unslash( $input['tabs_ui'] ) ) : 'buttons';
+		if ( ! in_array( $tabs_ui, array( 'buttons', 'select' ), true ) ) {
+			$tabs_ui = 'buttons';
+		}
+		$out['tabs_ui'] = $tabs_ui;
 
 		$cat_col = isset( $input['category_column'] ) ? sanitize_text_field( wp_unslash( $input['category_column'] ) ) : '';
 		$out['category_column'] = '' !== $cat_col ? $cat_col : 'Категория';

@@ -88,6 +88,22 @@ if ( empty( $id_prefix ) ) {
 			</td>
 		</tr>
 		<tr>
+			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-tabs-ui"><?php esc_html_e( 'Переключатель вкладок', 'at-excel-price' ); ?></label></th>
+			<td>
+				<?php
+				$tabs_ui = isset( $settings['tabs_ui'] ) ? (string) $settings['tabs_ui'] : 'buttons';
+				if ( ! in_array( $tabs_ui, array( 'buttons', 'select' ), true ) ) {
+					$tabs_ui = 'buttons';
+				}
+				?>
+				<select id="<?php echo esc_attr( $id_prefix ); ?>-tabs-ui" name="tabs_ui">
+					<option value="buttons" <?php selected( $tabs_ui, 'buttons' ); ?>><?php esc_html_e( 'Кнопки-вкладки', 'at-excel-price' ); ?></option>
+					<option value="select" <?php selected( $tabs_ui, 'select' ); ?>><?php esc_html_e( 'Выпадающий список', 'at-excel-price' ); ?></option>
+				</select>
+				<p class="description"><?php esc_html_e( 'В режиме списка вкладки выбираются из выпадающего перечня названий.', 'at-excel-price' ); ?></p>
+			</td>
+		</tr>
+		<tr>
 			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-category-column"><?php esc_html_e( 'Имя столбца категории', 'at-excel-price' ); ?></label></th>
 			<td>
 				<input

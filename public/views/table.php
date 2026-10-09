@@ -36,6 +36,10 @@ $col_mode = isset( $settings['column_width_mode'] ) ? (string) $settings['column
 if ( ! in_array( $col_mode, array( 'auto', 'equal', 'manual' ), true ) ) {
 	$col_mode = 'auto';
 }
+$tabs_ui = isset( $settings['tabs_ui'] ) ? (string) $settings['tabs_ui'] : 'buttons';
+if ( ! in_array( $tabs_ui, array( 'buttons', 'select' ), true ) ) {
+	$tabs_ui = 'buttons';
+}
 $manual_widths = ATEP_Plugin::parse_column_widths( isset( $settings['column_widths'] ) ? $settings['column_widths'] : '' );
 
 $classes = array( 'atep', 'atep-cols-' . $col_mode );
@@ -48,6 +52,9 @@ if ( ! empty( $settings['sticky_header'] ) ) {
 if ( ! empty( $settings['show_sort'] ) ) {
 	$classes[] = 'atep-sortable';
 }
+if ( 'select' === $tabs_ui ) {
+	$classes[] = 'atep-tabs-select';
+}
 ?>
 <div
 	id="<?php echo esc_attr( $uid ); ?>"
@@ -55,20 +62,40 @@ if ( ! empty( $settings['show_sort'] ) ) {
 	style="<?php echo esc_attr( $css_vars ); ?>"
 	data-per-page="<?php echo (int) $settings['per_page']; ?>"
 	data-col-mode="<?php echo esc_attr( $col_mode ); ?>"
+	data-tabs-ui="<?php echo esc_attr( $tabs_ui ); ?>"
 >
 	<?php if ( count( $sheets ) > 1 ) : ?>
-		<div class="atep-tabs" role="tablist">
-			<?php foreach ( $sheets as $index => $sheet ) : ?>
-				<button
-					type="button"
-					class="atep-tab<?php echo 0 === $index ? ' is-active' : ''; ?>"
-					role="tab"
-					aria-selected="<?php echo 0 === $index ? 'true' : 'false'; ?>"
-					data-atep-tab="<?php echo (int) $index; ?>"
-					title="<?php echo esc_attr( $sheet['name'] ); ?>"
-				><?php echo esc_html( $sheet['name'] ); ?></button>
-			<?php endforeach; ?>
-		</div>
+		<?php if ( 'select' === $tabs_ui ) : ?>
+			<div class="atep-tabs-select-wrap">
+				<label class="atep-tabs-select-label" for="<?php echo esc_attr( $uid ); ?>-tabs-select">
+					<span class="screen-reader-text"><?php esc_html_e( 'Выбор вкладки', 'at-excel-price' ); ?></span>
+					<select
+						id="<?php echo esc_attr( $uid ); ?>-tabs-select"
+						class="atep-tabs-select-control"
+						data-atep-tabs-select
+					>
+						<?php foreach ( $sheets as $index => $sheet ) : ?>
+							<option value="<?php echo (int) $index; ?>" <?php selected( $index, 0 ); ?>>
+								<?php echo esc_html( $sheet['name'] ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</label>
+			</div>
+		<?php else : ?>
+			<div class="atep-tabs" role="tablist">
+				<?php foreach ( $sheets as $index => $sheet ) : ?>
+					<button
+						type="button"
+						class="atep-tab<?php echo 0 === $index ? ' is-active' : ''; ?>"
+						role="tab"
+						aria-selected="<?php echo 0 === $index ? 'true' : 'false'; ?>"
+						data-atep-tab="<?php echo (int) $index; ?>"
+						title="<?php echo esc_attr( $sheet['name'] ); ?>"
+					><?php echo esc_html( $sheet['name'] ); ?></button>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
 	<?php elseif ( ! empty( $sheets[0]['name'] ) ) : ?>
 		<div class="atep-single-title"><?php echo esc_html( $sheets[0]['name'] ); ?></div>
 	<?php endif; ?>

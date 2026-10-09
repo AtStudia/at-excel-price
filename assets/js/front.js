@@ -154,7 +154,25 @@
 			perPage = 50;
 		}
 		var tabs = root.querySelectorAll("[data-atep-tab]");
+		var tabSelect = root.querySelector("[data-atep-tabs-select]");
 		var sheets = root.querySelectorAll("[data-atep-sheet]");
+
+		function showSheet(id) {
+			var key = String(id);
+			Array.prototype.forEach.call(tabs, function (other) {
+				var on = other.getAttribute("data-atep-tab") === key;
+				other.classList.toggle("is-active", on);
+				other.setAttribute("aria-selected", on ? "true" : "false");
+			});
+			Array.prototype.forEach.call(sheets, function (sheet) {
+				var on = sheet.getAttribute("data-atep-sheet") === key;
+				sheet.classList.toggle("is-active", on);
+				sheet.hidden = !on;
+			});
+			if (tabSelect && String(tabSelect.value) !== key) {
+				tabSelect.value = key;
+			}
+		}
 
 		Array.prototype.forEach.call(sheets, function (sheet) {
 			initSheet(sheet, perPage);
@@ -165,19 +183,15 @@
 
 		Array.prototype.forEach.call(tabs, function (tab) {
 			tab.addEventListener("click", function () {
-				var id = tab.getAttribute("data-atep-tab");
-				Array.prototype.forEach.call(tabs, function (other) {
-					var on = other === tab;
-					other.classList.toggle("is-active", on);
-					other.setAttribute("aria-selected", on ? "true" : "false");
-				});
-				Array.prototype.forEach.call(sheets, function (sheet) {
-					var on = sheet.getAttribute("data-atep-sheet") === id;
-					sheet.classList.toggle("is-active", on);
-					sheet.hidden = !on;
-				});
+				showSheet(tab.getAttribute("data-atep-tab"));
 			});
 		});
+
+		if (tabSelect) {
+			tabSelect.addEventListener("change", function () {
+				showSheet(tabSelect.value);
+			});
+		}
 	}
 
 	function boot() {
