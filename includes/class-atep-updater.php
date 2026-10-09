@@ -2,8 +2,8 @@
 /**
  * Update the plugin from GitHub Releases.
  *
- * WordPress 5.8+ calls update_plugins_{hostname} when the plugin header
- * contains "Update URI". Hostname here is github.com.
+ * Uses both Update URI (WP 5.8+) and pre_set_site_transient_update_plugins
+ * so the update appears even with Easy Updates Manager and similar plugins.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -16,6 +16,8 @@ class ATEP_Updater {
 
 	public static function init() {
 		add_filter( 'update_plugins_github.com', array( __CLASS__, 'offer' ), 10, 4 );
+		add_filter( 'pre_set_site_transient_update_plugins', array( __CLASS__, 'inject' ) );
+		add_filter( 'site_transient_update_plugins', array( __CLASS__, 'inject' ) );
 		add_filter( 'plugins_api', array( __CLASS__, 'plugin_info' ), 20, 3 );
 		add_filter( 'upgrader_source_selection', array( __CLASS__, 'source' ), 10, 4 );
 		add_filter( 'http_request_args', array( __CLASS__, 'auth_headers' ), 10, 2 );
@@ -56,11 +58,27 @@ class ATEP_Updater {
 	}
 
 	/**
+	 * Installed plugin version from the header (not only the constant).
+	 *
+	 * @return string
+	 */
+	public static function installed_version() {
+		if ( ! function_exists( 'get_plugin_data' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		$data = get_plugin_data( ATEP_FILE, false, false );
+		if ( ! empty( $data['Version'] ) ) {
+			return (string) $data['Version'];
+		}
+		return ATEP_VERSION;
+	}
+
+	/**
 	 * @param array|false          $update      Update payload.
 	 * @param array<string,string> $plugin_data Headers.
 	 * @param string               $plugin_file Plugin file.
 	 * @param string[]             $locales     Locales.
-	 * @return array|false
+	 * @return array|false|object
 	 */
 	public static function offer( $update, $plugin_data, $plugin_file, $locales ) {
 		unset( $plugin_data, $locales );
@@ -69,24 +87,96 @@ class ATEP_Updater {
 			return $update;
 		}
 
-		$remote = self::remote();
-		if ( empty( $remote['version'] ) || empty( $remote['package'] ) ) {
-			return $update;
+		$payload = self::payload();
+		return $payload ? $payload : $update;
+	}
+
+	/**
+	 * Inject update into the plugins transient (works with Easy Updates Manager).
+	 *
+	 * @param mixed $transient Transient value.
+	 * @return mixed
+	 */
+	public static function inject( $transient ) {
+		if ( ! is_object( $transient ) ) {
+			return $transient;
 		}
 
-		if ( version_compare( $remote['version'], ATEP_VERSION, '<=' ) ) {
-			return $update;
+		$plugin  = plugin_basename( ATEP_FILE );
+		$payload = self::payload();
+
+		if ( ! isset( $transient->response ) || ! is_array( $transient->response ) ) {
+			$transient->response = array();
+		}
+		if ( ! isset( $transient->no_update ) || ! is_array( $transient->no_update ) ) {
+			$transient->no_update = array();
+		}
+
+		if ( $payload ) {
+			unset( $transient->no_update[ $plugin ] );
+			$transient->response[ $plugin ] = $payload;
+			return $transient;
+		}
+
+		unset( $transient->response[ $plugin ] );
+		if ( ! isset( $transient->no_update[ $plugin ] ) ) {
+			$transient->no_update[ $plugin ] = self::current_item();
+		}
+
+		return $transient;
+	}
+
+	/**
+	 * @return object|false
+	 */
+	public static function payload() {
+		$remote = self::remote();
+		if ( empty( $remote['version'] ) || empty( $remote['package'] ) ) {
+			return false;
+		}
+
+		if ( version_compare( $remote['version'], self::installed_version(), '<=' ) ) {
+			return false;
 		}
 
 		return (object) array(
-			'id'           => 'https://github.com/' . self::repo(),
+			'id'           => 'github.com/' . self::repo(),
 			'slug'         => 'at-excel-price',
 			'plugin'       => plugin_basename( ATEP_FILE ),
 			'version'      => $remote['version'],
 			'new_version'  => $remote['version'],
 			'url'          => $remote['url'],
 			'package'      => $remote['package'],
+			'icons'        => array(),
+			'banners'      => array(),
+			'banners_rtl'  => array(),
+			'tested'       => '',
+			'requires'     => '5.8',
 			'requires_php' => '7.4',
+			'compatibility' => new stdClass(),
+		);
+	}
+
+	/**
+	 * @return object
+	 */
+	private static function current_item() {
+		$version = self::installed_version();
+		return (object) array(
+			'id'            => 'github.com/' . self::repo(),
+			'slug'          => 'at-excel-price',
+			'plugin'        => plugin_basename( ATEP_FILE ),
+			'version'       => $version,
+			'new_version'   => $version,
+			'url'           => 'https://github.com/' . self::repo(),
+			'package'       => '',
+			'icons'         => array(),
+			'banners'       => array(),
+			'banners_rtl'   => array(),
+			'tested'        => '',
+			'requires'      => '5.8',
+			'requires_php'  => '7.4',
+			'compatibility' => new stdClass(),
 		);
 	}
 
@@ -173,7 +263,7 @@ class ATEP_Updater {
 		}
 
 		$host = wp_parse_url( $url, PHP_URL_HOST );
-		if ( ! in_array( $host, array( 'github.com', 'api.github.com', 'codeload.github.com' ), true ) ) {
+		if ( ! in_array( $host, array( 'github.com', 'api.github.com', 'codeload.github.com', 'objects.githubusercontent.com', 'release-assets.githubusercontent.com' ), true ) ) {
 			return $args;
 		}
 
@@ -206,7 +296,7 @@ class ATEP_Updater {
 		}
 
 		$cached = get_site_transient( self::CACHE );
-		if ( is_array( $cached ) ) {
+		if ( is_array( $cached ) && array_key_exists( 'version', $cached ) ) {
 			return array_merge( $empty, $cached );
 		}
 
@@ -218,12 +308,12 @@ class ATEP_Updater {
 			)
 		);
 
-		$result = $empty;
+		$result        = $empty;
 		$result['url'] = 'https://github.com/' . $repo;
 
 		if ( is_wp_error( $response ) ) {
 			$result['error'] = $response->get_error_message();
-			set_site_transient( self::CACHE, $result, HOUR_IN_SECONDS );
+			set_site_transient( self::CACHE, $result, 15 * MINUTE_IN_SECONDS );
 			return $result;
 		}
 
@@ -231,8 +321,8 @@ class ATEP_Updater {
 		$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 
 		if ( 404 === $code ) {
-			$result['error'] = __( 'Релиз на GitHub не найден. Опубликуйте тег, например v1.2.0.', 'at-excel-price' );
-			set_site_transient( self::CACHE, $result, HOUR_IN_SECONDS );
+			$result['error'] = __( 'Релиз на GitHub не найден. Опубликуйте тег, например v1.3.0.', 'at-excel-price' );
+			set_site_transient( self::CACHE, $result, 15 * MINUTE_IN_SECONDS );
 			return $result;
 		}
 
@@ -242,7 +332,7 @@ class ATEP_Updater {
 				__( 'GitHub ответил кодом %d.', 'at-excel-price' ),
 				$code
 			);
-			set_site_transient( self::CACHE, $result, HOUR_IN_SECONDS );
+			set_site_transient( self::CACHE, $result, 15 * MINUTE_IN_SECONDS );
 			return $result;
 		}
 
@@ -273,7 +363,7 @@ class ATEP_Updater {
 		}
 		$result['notes'] = isset( $body['body'] ) ? (string) $body['body'] : '';
 
-		set_site_transient( self::CACHE, $result, 12 * HOUR_IN_SECONDS );
+		set_site_transient( self::CACHE, $result, HOUR_IN_SECONDS );
 		return $result;
 	}
 

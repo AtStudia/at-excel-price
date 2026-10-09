@@ -54,11 +54,23 @@ $id_prefix = 'atep';
 				</tr>
 			</table>
 			<?php
-			$release = get_site_transient( 'atep_github_release' );
-			if ( is_array( $release ) && ! empty( $release['error'] ) ) :
+			$installed = ATEP_Updater::installed_version();
+			$release   = ATEP_Updater::remote();
+			?>
+			<p>
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %s: version number */
+						__( 'Установлено: %s', 'at-excel-price' ),
+						$installed
+					)
+				);
 				?>
+			</p>
+			<?php if ( ! empty( $release['error'] ) ) : ?>
 				<p><strong><?php esc_html_e( 'Последняя проверка:', 'at-excel-price' ); ?></strong> <?php echo esc_html( $release['error'] ); ?></p>
-			<?php elseif ( is_array( $release ) && ! empty( $release['version'] ) ) : ?>
+			<?php elseif ( ! empty( $release['version'] ) ) : ?>
 				<p>
 					<?php
 					echo esc_html(
@@ -69,6 +81,11 @@ $id_prefix = 'atep';
 						)
 					);
 					?>
+					<?php if ( version_compare( $release['version'], $installed, '>' ) ) : ?>
+						— <strong><?php esc_html_e( 'доступно обновление', 'at-excel-price' ); ?></strong>
+					<?php else : ?>
+						— <?php esc_html_e( 'у вас актуальная версия', 'at-excel-price' ); ?>
+					<?php endif; ?>
 				</p>
 			<?php endif; ?>
 			<p>
