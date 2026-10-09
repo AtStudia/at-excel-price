@@ -30,6 +30,24 @@
 	margin: 0;
 }
 
+.atep-replace-row td {
+	background: #f6f7f7;
+	border-top: 0;
+	padding-top: 8px;
+	padding-bottom: 12px;
+}
+
+.atep-replace {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 12px;
+	align-items: center;
+}
+
+.atep-replace .description {
+	margin: 0;
+}
+
 .atep-preview {
 	max-width: none;
 	padding-bottom: 20px;

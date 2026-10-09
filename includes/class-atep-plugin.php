@@ -201,13 +201,26 @@ class ATEP_Plugin {
 
 		if ( 'upload_price' === $action ) {
 			check_admin_referer( 'atep_upload_price' );
-			$result = $this->import_upload();
+			$result = $this->import_upload( 0 );
 			if ( is_wp_error( $result ) ) {
 				set_transient( 'atep_admin_error_' . get_current_user_id(), $result->get_error_message(), 60 );
 				wp_safe_redirect( admin_url( 'admin.php?page=at-excel-price' ) );
 				exit;
 			}
 			wp_safe_redirect( admin_url( 'admin.php?page=at-excel-price&imported=1&preview=' . (int) $result ) );
+			exit;
+		}
+
+		if ( 'replace_price' === $action ) {
+			check_admin_referer( 'atep_replace_price' );
+			$id     = isset( $_POST['price_id'] ) ? (int) $_POST['price_id'] : 0;
+			$result = $this->import_upload( $id );
+			if ( is_wp_error( $result ) ) {
+				set_transient( 'atep_admin_error_' . get_current_user_id(), $result->get_error_message(), 60 );
+				wp_safe_redirect( admin_url( 'admin.php?page=at-excel-price&preview=' . $id ) );
+				exit;
+			}
+			wp_safe_redirect( admin_url( 'admin.php?page=at-excel-price&replaced=1&preview=' . (int) $result ) );
 			exit;
 		}
 
@@ -293,9 +306,12 @@ class ATEP_Plugin {
 	}
 
 	/**
+	 * Import a new price or replace Excel data for an existing one (same post ID / shortcode).
+	 *
+	 * @param int $replace_id Existing price ID, or 0 to create.
 	 * @return int|WP_Error Post ID.
 	 */
-	private function import_upload() {
+	private function import_upload( $replace_id = 0 ) {
 		if ( empty( $_FILES['price_file']['tmp_name'] ) ) {
 			return new WP_Error( 'atep_no_file', __( 'Выберите файл .xlsx.', 'at-excel-price' ) );
 		}
@@ -318,11 +334,6 @@ class ATEP_Plugin {
 			return new WP_Error( 'atep_mime', __( 'Тип файла не похож на книгу Excel.', 'at-excel-price' ) );
 		}
 
-		$title = isset( $_POST['price_title'] ) ? sanitize_text_field( wp_unslash( $_POST['price_title'] ) ) : '';
-		if ( '' === $title ) {
-			$title = preg_replace( '/\.xlsx$/i', '', $name );
-		}
-
 		$sheets = ATEP_XLSX::parse( $file['tmp_name'] );
 		if ( is_wp_error( $sheets ) ) {
 			return $sheets;
@@ -331,6 +342,39 @@ class ATEP_Plugin {
 		$sheets = $this->trim_sheets( $sheets );
 		if ( empty( $sheets ) ) {
 			return new WP_Error( 'atep_empty_data', __( 'В файле нет заполненных строк.', 'at-excel-price' ) );
+		}
+
+		$replace_id = (int) $replace_id;
+
+		if ( $replace_id > 0 ) {
+			$post = get_post( $replace_id );
+			if ( ! $post || 'atep_price' !== $post->post_type ) {
+				return new WP_Error( 'atep_missing', __( 'Прайс не найден.', 'at-excel-price' ) );
+			}
+
+			$title = isset( $_POST['price_title'] ) ? sanitize_text_field( wp_unslash( $_POST['price_title'] ) ) : '';
+			if ( '' !== $title && $title !== $post->post_title ) {
+				$updated = wp_update_post(
+					array(
+						'ID'         => $replace_id,
+						'post_title' => $title,
+					),
+					true
+				);
+				if ( is_wp_error( $updated ) ) {
+					return $updated;
+				}
+			}
+
+			update_post_meta( $replace_id, ATEP_META_SHEETS, wp_json_encode( $sheets, JSON_UNESCAPED_UNICODE ) );
+			update_post_meta( $replace_id, ATEP_META_SOURCE, $name );
+
+			return $replace_id;
+		}
+
+		$title = isset( $_POST['price_title'] ) ? sanitize_text_field( wp_unslash( $_POST['price_title'] ) ) : '';
+		if ( '' === $title ) {
+			$title = preg_replace( '/\.xlsx$/i', '', $name );
 		}
 
 		$post_id = wp_insert_post(

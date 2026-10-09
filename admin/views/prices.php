@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <div class="wrap atep-wrap">
 	<h1><?php esc_html_e( 'AT Excel Price', 'at-excel-price' ); ?></h1>
-	<p class="atep-lead"><?php esc_html_e( 'Загрузите книгу .xlsx. Каждый лист станет вкладкой на странице. Вставка: шорткод из таблицы ниже.', 'at-excel-price' ); ?></p>
+	<p class="atep-lead"><?php esc_html_e( 'Загрузите книгу .xlsx. Каждый лист станет вкладкой на странице. Вставка: шорткод из таблицы ниже. Файл можно обновить у существующего прайса — шорткод не изменится.', 'at-excel-price' ); ?></p>
 
 	<?php if ( $error ) : ?>
 		<div class="notice notice-error"><p><?php echo esc_html( $error ); ?></p></div>
@@ -21,6 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 	<?php if ( ! empty( $_GET['imported'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 		<div class="notice notice-success"><p><?php esc_html_e( 'Файл загружен. Ниже предпросмотр — так таблица выглядит на сайте.', 'at-excel-price' ); ?></p></div>
+	<?php endif; ?>
+
+	<?php if ( ! empty( $_GET['replaced'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+		<div class="notice notice-success"><p><?php esc_html_e( 'Файл обновлён. Шорткод на страницах менять не нужно.', 'at-excel-price' ); ?></p></div>
 	<?php endif; ?>
 
 	<?php if ( ! empty( $_GET['deleted'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
@@ -92,6 +96,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<input type="hidden" name="atep_action" value="delete_price" />
 									<input type="hidden" name="price_id" value="<?php echo (int) $price->ID; ?>" />
 									<button type="submit" class="button button-link-delete"><?php esc_html_e( 'Удалить', 'at-excel-price' ); ?></button>
+								</form>
+							</td>
+						</tr>
+						<tr class="atep-replace-row">
+							<td colspan="5">
+								<form method="post" enctype="multipart/form-data" class="atep-replace">
+									<?php wp_nonce_field( 'atep_replace_price' ); ?>
+									<input type="hidden" name="atep_action" value="replace_price" />
+									<input type="hidden" name="price_id" value="<?php echo (int) $price->ID; ?>" />
+									<label class="screen-reader-text" for="atep-replace-<?php echo (int) $price->ID; ?>"><?php esc_html_e( 'Новый файл Excel', 'at-excel-price' ); ?></label>
+									<input type="file" id="atep-replace-<?php echo (int) $price->ID; ?>" name="price_file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required />
+									<button type="submit" class="button"><?php esc_html_e( 'Обновить файл', 'at-excel-price' ); ?></button>
+									<span class="description"><?php esc_html_e( 'Заменит данные прайса. Шорткод останется тем же.', 'at-excel-price' ); ?></span>
 								</form>
 							</td>
 						</tr>
