@@ -180,8 +180,27 @@
 			return "";
 		}
 
-		function showSheet(id) {
+		function scrollToTitle() {
+			var target = sheetTitle || root;
+			if (!target || typeof target.scrollIntoView !== "function") {
+				return;
+			}
+			var reduce =
+				window.matchMedia &&
+				window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+			try {
+				target.scrollIntoView({
+					behavior: reduce ? "auto" : "smooth",
+					block: "start",
+				});
+			} catch (e) {
+				target.scrollIntoView(true);
+			}
+		}
+
+		function showSheet(id, options) {
 			var key = String(id);
+			var doScroll = options && options.scroll;
 			Array.prototype.forEach.call(tabs, function (other) {
 				var on = other.getAttribute("data-atep-tab") === key;
 				other.classList.toggle("is-active", on);
@@ -201,6 +220,9 @@
 					sheetTitle.textContent = name;
 				}
 			}
+			if (doScroll) {
+				scrollToTitle();
+			}
 		}
 
 		Array.prototype.forEach.call(sheets, function (sheet) {
@@ -212,13 +234,13 @@
 
 		Array.prototype.forEach.call(tabs, function (tab) {
 			tab.addEventListener("click", function () {
-				showSheet(tab.getAttribute("data-atep-tab"));
+				showSheet(tab.getAttribute("data-atep-tab"), { scroll: true });
 			});
 		});
 
 		if (tabSelect) {
 			tabSelect.addEventListener("change", function () {
-				showSheet(tabSelect.value);
+				showSheet(tabSelect.value, { scroll: true });
 			});
 		}
 	}
