@@ -26,7 +26,7 @@ if ( $tab_h_m < 1 ) {
 }
 
 $css_vars = sprintf(
-	'--atep-header-bg:%1$s;--atep-header-color:%2$s;--atep-row-bg:%3$s;--atep-row-color:%4$s;--atep-alt-bg:%5$s;--atep-alt-color:%6$s;--atep-border:%7$s;--atep-row-h:%8$dpx;--atep-font:%9$dpx;--atep-tab-bg:%10$s;--atep-tab-color:%11$s;--atep-tab-active-bg:%12$s;--atep-tab-active-color:%13$s;--atep-tab-radius:%14$dpx;--atep-tab-w:%15$s;--atep-tab-h:%16$s;--atep-tab-pad-y:%17$s;--atep-tab-lh:%18$s;--atep-tab-w-m:%19$s;--atep-tab-h-m:%20$s;--atep-tab-pad-y-m:%21$s;--atep-tab-lh-m:%22$s;--atep-title-color:%23$s;--atep-title-font:%24$dpx;',
+	'--atep-header-bg:%1$s;--atep-header-color:%2$s;--atep-row-bg:%3$s;--atep-row-color:%4$s;--atep-alt-bg:%5$s;--atep-alt-color:%6$s;--atep-border:%7$s;--atep-row-h:%8$dpx;--atep-font:%9$dpx;--atep-tab-bg:%10$s;--atep-tab-color:%11$s;--atep-tab-active-bg:%12$s;--atep-tab-active-color:%13$s;--atep-tab-radius:%14$dpx;--atep-tab-w:%15$s;--atep-tab-h:%16$s;--atep-tab-pad-y:%17$s;--atep-tab-lh:%18$s;--atep-tab-w-m:%19$s;--atep-tab-h-m:%20$s;--atep-tab-pad-y-m:%21$s;--atep-tab-lh-m:%22$s;--atep-title-color:%23$s;--atep-title-font:%24$dpx;--atep-tab-hover-bg:%25$s;--atep-tab-hover-color:%26$s;',
 	esc_attr( $settings['header_bg'] ),
 	esc_attr( $settings['header_color'] ),
 	esc_attr( $settings['row_bg'] ),
@@ -50,7 +50,9 @@ $css_vars = sprintf(
 	$tab_h_m > 0 ? '0px' : '8px',
 	$tab_h_m > 0 ? max( 1, $tab_h_m - 2 ) . 'px' : '1.2',
 	esc_attr( $settings['title_color'] ),
-	(int) $settings['title_font_size']
+	(int) $settings['title_font_size'],
+	esc_attr( $settings['tab_hover_bg'] ),
+	esc_attr( $settings['tab_hover_color'] )
 );
 
 $active_title = ! empty( $sheets[0]['name'] ) ? (string) $sheets[0]['name'] : '';

@@ -58,6 +58,8 @@ class ATEP_Plugin {
 			'tab_color'        => '#243028',
 			'tab_active_bg'    => '#1f4b3a',
 			'tab_active_color' => '#f7faf5',
+			'tab_hover_bg'     => '#d3e0cd',
+			'tab_hover_color'  => '#1f4b3a',
 			'title_color'       => '#1c241c',
 			'title_font_size'   => 22,
 			'tab_radius'         => 6,
@@ -109,6 +111,8 @@ class ATEP_Plugin {
 			'tab_color',
 			'tab_active_bg',
 			'tab_active_color',
+			'tab_hover_bg',
+			'tab_hover_color',
 			'title_color',
 		);
 	}
@@ -173,6 +177,8 @@ class ATEP_Plugin {
 			'tab_color',
 			'tab_active_bg',
 			'tab_active_color',
+			'tab_hover_bg',
+			'tab_hover_color',
 			'title_color',
 			'title_font_size',
 			'tab_radius',
@@ -619,6 +625,8 @@ class ATEP_Plugin {
 			'tab_color',
 			'tab_active_bg',
 			'tab_active_color',
+			'tab_hover_bg',
+			'tab_hover_color',
 			'title_color',
 		);
 

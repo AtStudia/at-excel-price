@@ -12,6 +12,8 @@
 	--atep-tab-color: #243028;
 	--atep-tab-active-bg: #1f4b3a;
 	--atep-tab-active-color: #f7faf5;
+	--atep-tab-hover-bg: #d3e0cd;
+	--atep-tab-hover-color: #1f4b3a;
 	--atep-tab-radius: 6px;
 	--atep-tab-w: auto;
 	--atep-tab-h: auto;
@@ -137,6 +139,19 @@
 	white-space: nowrap;
 	vertical-align: middle;
 	text-align: center;
+}
+
+.atep-tab,
+.atep select.atep-tabs-select-control {
+	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.atep-tab:not(.is-active):hover,
+.atep-tab:not(.is-active):focus-visible,
+.atep select.atep-tabs-select-control:hover {
+	background-color: var(--atep-tab-hover-bg);
+	color: var(--atep-tab-hover-color);
+	border-color: var(--atep-tab-hover-bg);
 }
 
 .atep-tab.is-active {
