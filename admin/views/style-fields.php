@@ -95,6 +95,21 @@ if ( ! in_array( $tabs_ui, array( 'buttons', 'select' ), true ) ) {
 			</td>
 		</tr>
 		<tr>
+			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-nowrap-column"><?php esc_html_e( 'Столбец без переноса', 'at-excel-price' ); ?></label></th>
+			<td>
+				<input
+					type="number"
+					min="0"
+					max="50"
+					id="<?php echo esc_attr( $id_prefix ); ?>-nowrap-column"
+					name="nowrap_column"
+					value="<?php echo (int) ( isset( $settings['nowrap_column'] ) ? $settings['nowrap_column'] : 0 ); ?>"
+					style="width:5.5em"
+				/>
+				<p class="description"><?php esc_html_e( 'Номер столбца слева направо (1 = первый). Текст в нём не переносится — удобно для цены. 0 = выкл.', 'at-excel-price' ); ?></p>
+			</td>
+		</tr>
+		<tr>
 			<th scope="row"><?php esc_html_e( 'Оформление', 'at-excel-price' ); ?></th>
 			<td>
 				<label><input type="checkbox" name="zebra" value="1" <?php checked( $settings['zebra'], 1 ); ?> /> <?php esc_html_e( 'Чередовать фон строк', 'at-excel-price' ); ?></label><br />

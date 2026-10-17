@@ -66,6 +66,7 @@ if ( ! in_array( $tabs_ui, array( 'buttons', 'select' ), true ) ) {
 	$tabs_ui = 'buttons';
 }
 $manual_widths = ATEP_Plugin::parse_column_widths( isset( $settings['column_widths'] ) ? $settings['column_widths'] : '' );
+$nowrap_column = max( 0, min( 50, (int) ( isset( $settings['nowrap_column'] ) ? $settings['nowrap_column'] : 0 ) ) );
 
 $classes = array( 'atep', 'atep-cols-' . $col_mode );
 if ( ! empty( $settings['zebra'] ) ) {
@@ -166,7 +167,14 @@ if ( 'select' === $tabs_ui ) {
 						<thead>
 							<tr>
 								<?php foreach ( $header as $col => $cell ) : ?>
-									<th scope="col" <?php echo ! empty( $settings['show_sort'] ) ? 'data-atep-sort="' . (int) $col . '"' : ''; ?>>
+									<?php
+									$th_class = ( $nowrap_column > 0 && ( (int) $col + 1 ) === $nowrap_column ) ? 'atep-nowrap' : '';
+									?>
+									<th
+										scope="col"
+										<?php echo $th_class ? ' class="' . esc_attr( $th_class ) . '"' : ''; ?>
+										<?php echo ! empty( $settings['show_sort'] ) ? 'data-atep-sort="' . (int) $col . '"' : ''; ?>
+									>
 										<?php echo esc_html( (string) $cell ); ?>
 									</th>
 								<?php endforeach; ?>
@@ -179,9 +187,10 @@ if ( 'select' === $tabs_ui ) {
 								<?php
 								$width = max( count( $header ), count( $row ) );
 								for ( $col = 0; $col < $width; $col++ ) :
-									$value = isset( $row[ $col ] ) ? (string) $row[ $col ] : '';
+									$value    = isset( $row[ $col ] ) ? (string) $row[ $col ] : '';
+									$td_class = ( $nowrap_column > 0 && ( $col + 1 ) === $nowrap_column ) ? 'atep-nowrap' : '';
 									?>
-									<td><?php echo esc_html( $value ); ?></td>
+									<td<?php echo $td_class ? ' class="' . esc_attr( $td_class ) . '"' : ''; ?>><?php echo esc_html( $value ); ?></td>
 								<?php endfor; ?>
 							</tr>
 						<?php endforeach; ?>

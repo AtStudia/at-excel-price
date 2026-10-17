@@ -74,6 +74,7 @@ class ATEP_Plugin {
 			'zebra'              => 1,
 			'column_width_mode'  => 'auto',
 			'column_widths'      => '',
+			'nowrap_column'      => 0,
 			'tabs_mode'          => 'sheets',
 			'tabs_ui'            => 'buttons',
 			'category_column'    => 'Категория',
@@ -142,6 +143,7 @@ class ATEP_Plugin {
 		$out['tab_height']        = max( 0, min( 120, (int) $out['tab_height'] ) );
 		$out['tab_width_mobile']  = max( 0, min( 800, (int) $out['tab_width_mobile'] ) );
 		$out['tab_height_mobile'] = max( 0, min( 120, (int) $out['tab_height_mobile'] ) );
+		$out['nowrap_column']     = max( 0, min( 50, (int) $out['nowrap_column'] ) );
 		if ( empty( $out['column_width_mode'] ) || ! in_array( (string) $out['column_width_mode'], array( 'auto', 'equal', 'manual' ), true ) ) {
 			$out['column_width_mode'] = 'auto';
 		}
@@ -193,6 +195,7 @@ class ATEP_Plugin {
 			'zebra',
 			'column_width_mode',
 			'column_widths',
+			'nowrap_column',
 			'tabs_mode',
 			'tabs_ui',
 			'category_column',
@@ -657,6 +660,8 @@ class ATEP_Plugin {
 
 		$widths = self::parse_column_widths( isset( $input['column_widths'] ) ? wp_unslash( $input['column_widths'] ) : '' );
 		$out['column_widths'] = empty( $widths ) ? '' : implode( ',', $widths );
+
+		$out['nowrap_column'] = $this->clamp_int( isset( $input['nowrap_column'] ) ? $input['nowrap_column'] : 0, 0, 50 );
 
 		$tabs_mode = isset( $input['tabs_mode'] ) ? sanitize_key( wp_unslash( $input['tabs_mode'] ) ) : 'sheets';
 		if ( ! in_array( $tabs_mode, array( 'sheets', 'category' ), true ) ) {

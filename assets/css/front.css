@@ -252,6 +252,14 @@
 	hyphens: auto;
 }
 
+.atep-table th.atep-nowrap,
+.atep-table td.atep-nowrap {
+	white-space: nowrap;
+	overflow-wrap: normal;
+	word-break: normal;
+	hyphens: none;
+}
+
 .atep-table th:last-child,
 .atep-table td:last-child {
 	border-right: 0;
