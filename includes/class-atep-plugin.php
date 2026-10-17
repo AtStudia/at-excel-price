@@ -58,8 +58,14 @@ class ATEP_Plugin {
 			'tab_color'        => '#243028',
 			'tab_active_bg'    => '#1f4b3a',
 			'tab_active_color' => '#f7faf5',
-			'tab_radius'       => 6,
-			'per_page'         => 50,
+			'title_color'       => '#1c241c',
+			'title_font_size'   => 22,
+			'tab_radius'         => 6,
+			'tab_width'          => 0,
+			'tab_height'         => 0,
+			'tab_width_mobile'   => 0,
+			'tab_height_mobile'  => 0,
+			'per_page'           => 50,
 			'show_search'        => 1,
 			'show_sort'          => 1,
 			'sticky_header'      => 1,
@@ -103,6 +109,7 @@ class ATEP_Plugin {
 			'tab_color',
 			'tab_active_bg',
 			'tab_active_color',
+			'title_color',
 		);
 	}
 
@@ -122,11 +129,15 @@ class ATEP_Plugin {
 			$raw = isset( $out[ $key ] ) ? sanitize_hex_color( (string) $out[ $key ] ) : '';
 			$out[ $key ] = $raw ? $raw : $defaults[ $key ];
 		}
-		foreach ( array( 'row_height', 'font_size', 'tab_radius', 'per_page' ) as $key ) {
+		foreach ( array( 'row_height', 'font_size', 'title_font_size', 'tab_radius', 'per_page' ) as $key ) {
 			if ( empty( $out[ $key ] ) || (int) $out[ $key ] < 1 ) {
 				$out[ $key ] = $defaults[ $key ];
 			}
 		}
+		$out['tab_width']         = max( 0, min( 800, (int) $out['tab_width'] ) );
+		$out['tab_height']        = max( 0, min( 120, (int) $out['tab_height'] ) );
+		$out['tab_width_mobile']  = max( 0, min( 800, (int) $out['tab_width_mobile'] ) );
+		$out['tab_height_mobile'] = max( 0, min( 120, (int) $out['tab_height_mobile'] ) );
 		if ( empty( $out['column_width_mode'] ) || ! in_array( (string) $out['column_width_mode'], array( 'auto', 'equal', 'manual' ), true ) ) {
 			$out['column_width_mode'] = 'auto';
 		}
@@ -162,7 +173,13 @@ class ATEP_Plugin {
 			'tab_color',
 			'tab_active_bg',
 			'tab_active_color',
+			'title_color',
+			'title_font_size',
 			'tab_radius',
+			'tab_width',
+			'tab_height',
+			'tab_width_mobile',
+			'tab_height_mobile',
 			'per_page',
 			'show_search',
 			'show_sort',
@@ -602,6 +619,7 @@ class ATEP_Plugin {
 			'tab_color',
 			'tab_active_bg',
 			'tab_active_color',
+			'title_color',
 		);
 
 		foreach ( $colors as $key ) {
@@ -611,7 +629,12 @@ class ATEP_Plugin {
 
 		$out['row_height'] = $this->clamp_int( isset( $input['row_height'] ) ? $input['row_height'] : 40, 24, 96 );
 		$out['font_size']  = $this->clamp_int( isset( $input['font_size'] ) ? $input['font_size'] : 14, 11, 22 );
+		$out['title_font_size'] = $this->clamp_int( isset( $input['title_font_size'] ) ? $input['title_font_size'] : 22, 14, 48 );
 		$out['tab_radius'] = $this->clamp_int( isset( $input['tab_radius'] ) ? $input['tab_radius'] : 6, 0, 24 );
+		$out['tab_width']         = $this->clamp_int( isset( $input['tab_width'] ) ? $input['tab_width'] : 0, 0, 800 );
+		$out['tab_height']        = $this->clamp_int( isset( $input['tab_height'] ) ? $input['tab_height'] : 0, 0, 120 );
+		$out['tab_width_mobile']  = $this->clamp_int( isset( $input['tab_width_mobile'] ) ? $input['tab_width_mobile'] : 0, 0, 800 );
+		$out['tab_height_mobile'] = $this->clamp_int( isset( $input['tab_height_mobile'] ) ? $input['tab_height_mobile'] : 0, 0, 120 );
 		$out['per_page']   = $this->clamp_int( isset( $input['per_page'] ) ? $input['per_page'] : 50, 10, 500 );
 
 		foreach ( array( 'show_search', 'show_sort', 'sticky_header', 'zebra' ) as $flag ) {

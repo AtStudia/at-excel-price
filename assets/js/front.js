@@ -156,6 +156,29 @@
 		var tabs = root.querySelectorAll("[data-atep-tab]");
 		var tabSelect = root.querySelector("[data-atep-tabs-select]");
 		var sheets = root.querySelectorAll("[data-atep-sheet]");
+		var sheetTitle = root.querySelector("[data-atep-sheet-title]");
+
+		function tabNameFor(id) {
+			var key = String(id);
+			if (tabSelect) {
+				var opt = tabSelect.options[tabSelect.selectedIndex];
+				if (String(tabSelect.value) !== key) {
+					for (var i = 0; i < tabSelect.options.length; i++) {
+						if (String(tabSelect.options[i].value) === key) {
+							opt = tabSelect.options[i];
+							break;
+						}
+					}
+				}
+				return opt ? (opt.textContent || "").trim() : "";
+			}
+			for (var t = 0; t < tabs.length; t++) {
+				if (tabs[t].getAttribute("data-atep-tab") === key) {
+					return (tabs[t].getAttribute("title") || tabs[t].textContent || "").trim();
+				}
+			}
+			return "";
+		}
 
 		function showSheet(id) {
 			var key = String(id);
@@ -171,6 +194,12 @@
 			});
 			if (tabSelect && String(tabSelect.value) !== key) {
 				tabSelect.value = key;
+			}
+			if (sheetTitle) {
+				var name = tabNameFor(key);
+				if (name) {
+					sheetTitle.textContent = name;
+				}
 			}
 		}
 

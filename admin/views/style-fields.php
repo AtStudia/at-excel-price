@@ -22,6 +22,7 @@ $fields = array(
 	'tab_color'        => __( 'Текст вкладки', 'at-excel-price' ),
 	'tab_active_bg'    => __( 'Фон активной вкладки', 'at-excel-price' ),
 	'tab_active_color' => __( 'Текст активной вкладки', 'at-excel-price' ),
+	'title_color'      => __( 'Цвет заголовка вкладки (h2)', 'at-excel-price' ),
 );
 
 if ( empty( $id_prefix ) ) {
@@ -52,8 +53,41 @@ if ( empty( $id_prefix ) ) {
 			<td><input type="number" min="11" max="22" id="<?php echo esc_attr( $id_prefix ); ?>-font-size" name="font_size" value="<?php echo (int) $settings['font_size']; ?>" /></td>
 		</tr>
 		<tr>
+			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-title-font-size"><?php esc_html_e( 'Размер заголовка вкладки (h2), px', 'at-excel-price' ); ?></label></th>
+			<td>
+				<input type="number" min="14" max="48" id="<?php echo esc_attr( $id_prefix ); ?>-title-font-size" name="title_font_size" value="<?php echo (int) ( isset( $settings['title_font_size'] ) ? $settings['title_font_size'] : 22 ); ?>" />
+				<p class="description"><?php esc_html_e( 'Над таблицей показывается название выбранной вкладки.', 'at-excel-price' ); ?></p>
+			</td>
+		</tr>
+		<tr>
 			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-tab-radius"><?php esc_html_e( 'Скругление вкладок, px', 'at-excel-price' ); ?></label></th>
 			<td><input type="number" min="0" max="24" id="<?php echo esc_attr( $id_prefix ); ?>-tab-radius" name="tab_radius" value="<?php echo (int) $settings['tab_radius']; ?>" /></td>
+		</tr>
+		<tr>
+			<th scope="row"><?php esc_html_e( 'Размер вкладок (ПК)', 'at-excel-price' ); ?></th>
+			<td>
+				<label for="<?php echo esc_attr( $id_prefix ); ?>-tab-width" class="atep-inline-label"><?php esc_html_e( 'Ширина', 'at-excel-price' ); ?></label>
+				<input type="number" min="0" max="800" id="<?php echo esc_attr( $id_prefix ); ?>-tab-width" name="tab_width" value="<?php echo (int) ( isset( $settings['tab_width'] ) ? $settings['tab_width'] : 0 ); ?>" style="width:5.5em" />
+				<span>px</span>
+				&nbsp;&nbsp;
+				<label for="<?php echo esc_attr( $id_prefix ); ?>-tab-height" class="atep-inline-label"><?php esc_html_e( 'Высота', 'at-excel-price' ); ?></label>
+				<input type="number" min="0" max="120" id="<?php echo esc_attr( $id_prefix ); ?>-tab-height" name="tab_height" value="<?php echo (int) ( isset( $settings['tab_height'] ) ? $settings['tab_height'] : 0 ); ?>" style="width:5.5em" />
+				<span>px</span>
+				<p class="description"><?php esc_html_e( '0 = авто. Длинный текст обрезается с «…». Полное название видно при наведении.', 'at-excel-price' ); ?></p>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?php esc_html_e( 'Размер вкладок (смартфон)', 'at-excel-price' ); ?></th>
+			<td>
+				<label for="<?php echo esc_attr( $id_prefix ); ?>-tab-width-mobile" class="atep-inline-label"><?php esc_html_e( 'Ширина', 'at-excel-price' ); ?></label>
+				<input type="number" min="0" max="800" id="<?php echo esc_attr( $id_prefix ); ?>-tab-width-mobile" name="tab_width_mobile" value="<?php echo (int) ( isset( $settings['tab_width_mobile'] ) ? $settings['tab_width_mobile'] : 0 ); ?>" style="width:5.5em" />
+				<span>px</span>
+				&nbsp;&nbsp;
+				<label for="<?php echo esc_attr( $id_prefix ); ?>-tab-height-mobile" class="atep-inline-label"><?php esc_html_e( 'Высота', 'at-excel-price' ); ?></label>
+				<input type="number" min="0" max="120" id="<?php echo esc_attr( $id_prefix ); ?>-tab-height-mobile" name="tab_height_mobile" value="<?php echo (int) ( isset( $settings['tab_height_mobile'] ) ? $settings['tab_height_mobile'] : 0 ); ?>" style="width:5.5em" />
+				<span>px</span>
+				<p class="description"><?php esc_html_e( 'Для экранов до 767px. 0 = авто (или значение ПК, если задано).', 'at-excel-price' ); ?></p>
+			</td>
 		</tr>
 		<tr>
 			<th scope="row"><label for="<?php echo esc_attr( $id_prefix ); ?>-per-page"><?php esc_html_e( 'Строк на странице', 'at-excel-price' ); ?></label></th>

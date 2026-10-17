@@ -14,8 +14,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $settings = ATEP_Plugin::normalize_settings( $settings );
 
+$tab_w   = (int) $settings['tab_width'];
+$tab_h   = (int) $settings['tab_height'];
+$tab_w_m = (int) $settings['tab_width_mobile'];
+$tab_h_m = (int) $settings['tab_height_mobile'];
+if ( $tab_w_m < 1 ) {
+	$tab_w_m = $tab_w;
+}
+if ( $tab_h_m < 1 ) {
+	$tab_h_m = $tab_h;
+}
+
 $css_vars = sprintf(
-	'--atep-header-bg:%1$s;--atep-header-color:%2$s;--atep-row-bg:%3$s;--atep-row-color:%4$s;--atep-alt-bg:%5$s;--atep-alt-color:%6$s;--atep-border:%7$s;--atep-row-h:%8$dpx;--atep-font:%9$dpx;--atep-tab-bg:%10$s;--atep-tab-color:%11$s;--atep-tab-active-bg:%12$s;--atep-tab-active-color:%13$s;--atep-tab-radius:%14$dpx;',
+	'--atep-header-bg:%1$s;--atep-header-color:%2$s;--atep-row-bg:%3$s;--atep-row-color:%4$s;--atep-alt-bg:%5$s;--atep-alt-color:%6$s;--atep-border:%7$s;--atep-row-h:%8$dpx;--atep-font:%9$dpx;--atep-tab-bg:%10$s;--atep-tab-color:%11$s;--atep-tab-active-bg:%12$s;--atep-tab-active-color:%13$s;--atep-tab-radius:%14$dpx;--atep-tab-w:%15$s;--atep-tab-h:%16$s;--atep-tab-pad-y:%17$s;--atep-tab-lh:%18$s;--atep-tab-w-m:%19$s;--atep-tab-h-m:%20$s;--atep-tab-pad-y-m:%21$s;--atep-tab-lh-m:%22$s;--atep-title-color:%23$s;--atep-title-font:%24$dpx;',
 	esc_attr( $settings['header_bg'] ),
 	esc_attr( $settings['header_color'] ),
 	esc_attr( $settings['row_bg'] ),
@@ -29,8 +40,20 @@ $css_vars = sprintf(
 	esc_attr( $settings['tab_color'] ),
 	esc_attr( $settings['tab_active_bg'] ),
 	esc_attr( $settings['tab_active_color'] ),
-	(int) $settings['tab_radius']
+	(int) $settings['tab_radius'],
+	$tab_w > 0 ? $tab_w . 'px' : 'auto',
+	$tab_h > 0 ? $tab_h . 'px' : 'auto',
+	$tab_h > 0 ? '0px' : '8px',
+	$tab_h > 0 ? max( 1, $tab_h - 2 ) . 'px' : '1.2',
+	$tab_w_m > 0 ? $tab_w_m . 'px' : 'auto',
+	$tab_h_m > 0 ? $tab_h_m . 'px' : 'auto',
+	$tab_h_m > 0 ? '0px' : '8px',
+	$tab_h_m > 0 ? max( 1, $tab_h_m - 2 ) . 'px' : '1.2',
+	esc_attr( $settings['title_color'] ),
+	(int) $settings['title_font_size']
 );
+
+$active_title = ! empty( $sheets[0]['name'] ) ? (string) $sheets[0]['name'] : '';
 
 $col_mode = isset( $settings['column_width_mode'] ) ? (string) $settings['column_width_mode'] : 'auto';
 if ( ! in_array( $col_mode, array( 'auto', 'equal', 'manual' ), true ) ) {
@@ -96,8 +119,10 @@ if ( 'select' === $tabs_ui ) {
 				<?php endforeach; ?>
 			</div>
 		<?php endif; ?>
-	<?php elseif ( ! empty( $sheets[0]['name'] ) ) : ?>
-		<div class="atep-single-title"><?php echo esc_html( $sheets[0]['name'] ); ?></div>
+	<?php endif; ?>
+
+	<?php if ( '' !== $active_title ) : ?>
+		<h2 class="atep-sheet-title" data-atep-sheet-title><?php echo esc_html( $active_title ); ?></h2>
 	<?php endif; ?>
 
 	<?php foreach ( $sheets as $index => $sheet ) : ?>

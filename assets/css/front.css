@@ -13,6 +13,16 @@
 	--atep-tab-active-bg: #1f4b3a;
 	--atep-tab-active-color: #f7faf5;
 	--atep-tab-radius: 6px;
+	--atep-tab-w: auto;
+	--atep-tab-h: auto;
+	--atep-tab-pad-y: 8px;
+	--atep-tab-lh: 1.2;
+	--atep-tab-w-m: auto;
+	--atep-tab-h-m: auto;
+	--atep-tab-pad-y-m: 8px;
+	--atep-tab-lh-m: 1.2;
+	--atep-title-color: #1c241c;
+	--atep-title-font: 22px;
 	box-sizing: border-box;
 	display: block;
 	width: 100%;
@@ -43,7 +53,8 @@
 
 .atep-tabs-select-label {
 	display: block;
-	max-width: min(100%, 420px);
+	width: 100%;
+	max-width: var(--atep-tab-w, 420px);
 }
 
 .atep select.atep-tabs-select-control {
@@ -53,26 +64,26 @@
 	display: block;
 	width: 100%;
 	max-width: 100%;
-	height: auto;
-	min-height: 44px;
+	height: var(--atep-tab-h, auto);
+	min-height: var(--atep-tab-h, 44px);
 	box-sizing: border-box;
 	border: 1px solid var(--atep-border);
 	border-radius: var(--atep-tab-radius);
 	color: var(--atep-tab-color);
-	padding: 12px 40px 12px 14px;
+	padding: var(--atep-tab-pad-y, 8px) 40px var(--atep-tab-pad-y, 8px) 14px;
 	margin: 0;
 	font: inherit;
 	font-size: var(--atep-font, 14px);
-	line-height: 1.45;
+	line-height: var(--atep-tab-lh, 1.45);
 	vertical-align: middle;
 	cursor: pointer;
-	overflow: visible;
+	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	background-color: var(--atep-tab-bg);
 	background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
 		linear-gradient(135deg, currentColor 50%, transparent 50%);
-	background-position: calc(100% - 18px) calc(50% + 1px), calc(100% - 12px) calc(50% + 1px);
+	background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
 	background-size: 6px 6px, 6px 6px;
 	background-repeat: no-repeat;
 }
@@ -80,6 +91,19 @@
 .atep select.atep-tabs-select-control:focus {
 	outline: 2px solid var(--atep-tab-active-bg);
 	outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+	.atep-tabs-select-label {
+		max-width: var(--atep-tab-w-m, var(--atep-tab-w, 420px));
+	}
+
+	.atep select.atep-tabs-select-control {
+		height: var(--atep-tab-h-m, var(--atep-tab-h, auto));
+		min-height: var(--atep-tab-h-m, var(--atep-tab-h, 44px));
+		padding: var(--atep-tab-pad-y-m, var(--atep-tab-pad-y, 8px)) 40px var(--atep-tab-pad-y-m, var(--atep-tab-pad-y, 8px)) 14px;
+		line-height: var(--atep-tab-lh-m, var(--atep-tab-lh, 1.45));
+	}
 }
 
 /* Hide paged-out rows only after JS initialized — avoids blank tables if JS fails. */
@@ -101,10 +125,18 @@
 }
 
 .atep-tab {
-	max-width: min(100%, 320px);
+	display: inline-block;
+	box-sizing: border-box;
+	width: var(--atep-tab-w, auto);
+	max-width: 100%;
+	height: var(--atep-tab-h, auto);
+	padding: var(--atep-tab-pad-y, 8px) 14px;
+	line-height: var(--atep-tab-lh, 1.2);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	vertical-align: middle;
+	text-align: center;
 }
 
 .atep-tab.is-active {
@@ -113,9 +145,24 @@
 	border-color: var(--atep-tab-active-bg);
 }
 
-.atep-single-title {
+@media (max-width: 767px) {
+	.atep-tab {
+		width: var(--atep-tab-w-m, var(--atep-tab-w, auto));
+		height: var(--atep-tab-h-m, var(--atep-tab-h, auto));
+		padding: var(--atep-tab-pad-y-m, var(--atep-tab-pad-y, 8px)) 14px;
+		line-height: var(--atep-tab-lh-m, var(--atep-tab-lh, 1.2));
+	}
+}
+
+.atep-sheet-title {
+	margin: 0 0 12px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--atep-title-color, #1c241c);
+	font-size: var(--atep-title-font, 22px);
 	font-weight: 650;
-	margin: 0 0 10px;
+	line-height: 1.25;
 }
 
 .atep-toolbar {
